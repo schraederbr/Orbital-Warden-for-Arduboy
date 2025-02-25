@@ -92,7 +92,7 @@ void drawStars() {
 
 
 // Creates a random point at a given angle and distance from the center.
-Point2D random_point_at_angle(float angle_deg, float min_distance, float max_distance) {
+Point2D randomPointAtAngle(float angle_deg, float min_distance, float max_distance) {
   float angle_rad = angle_deg * (PI / 180.0f);
   float distance  = randomFloat(min_distance, max_distance);
   Point2D pt;
@@ -102,7 +102,7 @@ Point2D random_point_at_angle(float angle_deg, float min_distance, float max_dis
 }
 
 // Generates an array of slightly irregular points forming a "random circle."
-Point2D* random_circle(int angle_step, float min_distance, float max_distance, int &num_points) {
+Point2D* randomCircle(int angle_step, float min_distance, float max_distance, int &num_points) {
   // We still produce approximately (360 / angle_step) points:
   num_points = 360 / angle_step;
   Point2D* points = new Point2D[num_points];
@@ -123,7 +123,7 @@ Point2D* random_circle(int angle_step, float min_distance, float max_distance, i
     }
 
     // Create a point at the (slightly randomized) angle
-    Point2D pt = random_point_at_angle(angle, min_distance, max_distance);
+    Point2D pt = randomPointAtAngle(angle, min_distance, max_distance);
 
     // Optionally add a small x/y offset
     pt.x += randomFloat(-2.0f, 2.0f);
@@ -134,11 +134,25 @@ Point2D* random_circle(int angle_step, float min_distance, float max_distance, i
 
   return points;
 }
+//These coordinates could be off
+void generateTurrets(int numTurrets){
+  for(int i = 0; i < numTurrets; i++){
+    int turretIndex = random(0,circle_num_points);
+    Point2D p1 = circle_points[turretIndex];
+    Point2D p2 = circle_points[0];
+    if(turretIndex != circle_num_points){
+      Point2D p2 = circle_points[turretIndex+1];
+    }
+    Point2D turretPosition = randomPointOnLine(p1,p2);
+    turrets[i] = turretPosition;
+  }
+    
+}
 
 
 // Draw lines connecting the points in "circle_points" (in world space).
 // We subtract cameraX/cameraY so they appear correctly on the screen.
-void draw_lines(Point2D* points, int num_points, bool close_shape) {
+void drawLines(Point2D* points, int num_points, bool close_shape) {
   if (num_points <= 0) return;
 
   int prevX = (int)(worldCenterX + points[0].x - cameraX);
@@ -187,4 +201,55 @@ void drawShip(float screenX, float screenY, float angle) {
 
   arduboy.drawTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
 }
+
+//My coordinates may be off
+// I should try drawing an unrotated square first
+// Draws a rotated rectangle of given width & height, centered at (screenX, screenY), at the specified angle.
+void drawRotatedRect(float screenX, float screenY, float width, float height, float angle) 
+{
+  // Half dimensions so the rectangle is centered at (0, 0) before translation
+  float halfW = width * 0.5;
+  float halfH = height * 0.5;
+
+  // Rectangle corners relative to center
+  // We'll define them in a clockwise (or counter-clockwise) order
+  float x1 = -halfW;  float y1 = -halfH;  // top-left
+  float x2 =  halfW;  float y2 = -halfH;  // top-right
+  float x3 =  halfW;  float y3 =  halfH;  // bottom-right
+  float x4 = -halfW;  float y4 =  halfH;  // bottom-left
+
+  // Precompute sine and cosine of the angle
+  float cosA = cos(angle);
+  float sinA = sin(angle);
+
+  // Rotate each corner
+  float rx1 = x1 * cosA - y1 * sinA;
+  float ry1 = x1 * sinA + y1 * cosA;
+
+  float rx2 = x2 * cosA - y2 * sinA;
+  float ry2 = x2 * sinA + y2 * cosA;
+
+  float rx3 = x3 * cosA - y3 * sinA;
+  float ry3 = x3 * sinA + y3 * cosA;
+
+  float rx4 = x4 * cosA - y4 * sinA;
+  float ry4 = x4 * sinA + y4 * cosA;
+
+  // Translate to the screen position
+  int ix1 = (int)(screenX + rx1);
+  int iy1 = (int)(screenY + ry1);
+  int ix2 = (int)(screenX + rx2);
+  int iy2 = (int)(screenY + ry2);
+  int ix3 = (int)(screenX + rx3);
+  int iy3 = (int)(screenY + ry3);
+  int ix4 = (int)(screenX + rx4);
+  int iy4 = (int)(screenY + ry4);
+
+  // Draw the edges of the rectangle (4 lines)
+  // arduboy.drawLine(ix1, iy1, ix2, iy2, WHITE);
+  // arduboy.drawLine(ix2, iy2, ix3, iy3, WHITE);
+  // arduboy.drawLine(ix3, iy3, ix4, iy4, WHITE);
+  // arduboy.drawLine(ix4, iy4, ix1, iy1, WHITE);
+}
+
 
