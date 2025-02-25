@@ -103,21 +103,38 @@ Point2D random_point_at_angle(float angle_deg, float min_distance, float max_dis
 
 // Generates an array of slightly irregular points forming a "random circle."
 Point2D* random_circle(int angle_step, float min_distance, float max_distance, int &num_points) {
-  num_points = 360 / angle_step;  // assumes angle_step divides 360
+  // We still produce approximately (360 / angle_step) points:
+  num_points = 360 / angle_step;
   Point2D* points = new Point2D[num_points];
-  int index = 0;
 
-  for (int angle = 0; angle < 360; angle += angle_step) {
-    // Base point
+  for (int i = 0; i < num_points; i++) {
+    // Base angle for this index
+    int baseAngle = i * angle_step;
+
+    // Add a small random offset in the range [-5..5]
+    int offset = random(-5, 6); // random(a, b) goes [a..(b-1)]
+    int angle = baseAngle + offset;
+
+    // Clamp angle to [0..359] just in case
+    if (angle < 0) {
+      angle += 360;
+    } else if (angle >= 360) {
+      angle -= 360;
+    }
+
+    // Create a point at the (slightly randomized) angle
     Point2D pt = random_point_at_angle(angle, min_distance, max_distance);
-    // Slight random offset
+
+    // Optionally add a small x/y offset
     pt.x += randomFloat(-2.0f, 2.0f);
     pt.y += randomFloat(-2.0f, 2.0f);
 
-    points[index++] = pt;
+    points[i] = pt;
   }
+
   return points;
 }
+
 
 // Draw lines connecting the points in "circle_points" (in world space).
 // We subtract cameraX/cameraY so they appear correctly on the screen.

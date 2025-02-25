@@ -8,7 +8,7 @@ Arduboy2 arduboy;
 // -----------------------
 const int screenWidth  = 128;
 const int screenHeight = 64;
-const int planetMinRadius = 120;
+const int planetMinRadius = 60;
 const int planetMaxRadius = 140;
 const int planetStepAngle = 25;
 
