@@ -6,8 +6,8 @@ void setup() {
   arduboy.setFrameRate(60);
 
   randomSeed(analogRead(0));
-  circle_points = random_circle(25, 60, 180, circle_num_points);
-
+  circle_points = random_circle(planetStepAngle, planetMinRadius, planetMaxRadius, circle_num_points);
+  generateStars();
   // Start the ship somewhere in the world. For demonstration, let's put it
   // near the middle of the full 512×256 world.
   shipX     = worldWidth / 2;   // = 256
@@ -62,12 +62,14 @@ void loop() {
   if (cameraY < 0) cameraY = 0;
   if (cameraY > (worldHeight - screenHeight)) cameraY = worldHeight - screenHeight;
 
+  drawStars();
+
   // --- 3. Generate a new circle (optional) ---
   if (arduboy.justPressed(B_BUTTON)) {
     if (circle_points != nullptr) {
       delete[] circle_points;
     }
-    circle_points = random_circle(25, 60, 180, circle_num_points);
+    circle_points = random_circle(planetStepAngle, planetMinRadius, planetMaxRadius, circle_num_points);
   }
 
   // --- 4. Draw the Random Circle ---
@@ -87,6 +89,6 @@ void loop() {
   float screenShipX = shipX - cameraX;
   float screenShipY = shipY - cameraY;
   drawShip(screenShipX, screenShipY, shipAngle);
-
+  arduboy.print(starCount);
   arduboy.display();
 }

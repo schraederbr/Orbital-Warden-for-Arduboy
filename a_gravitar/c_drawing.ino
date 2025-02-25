@@ -1,6 +1,96 @@
 #include <Arduboy2.h>
 #include <math.h>
 
+
+
+
+
+// -------------------------
+// Stars (Background)
+// -------------------------
+static const int NUM_STARS = 100; // how many stars you want
+struct Star {
+  float x;
+  float y;
+  int   size;  // 1..3, for example
+};
+Star stars[NUM_STARS];
+int starCount = 0;
+
+// We pick a parallax factor < 1. If we use 0.5f, the stars move at half speed.
+const float STAR_PARALLAX = 0.5f;
+
+void generateStars() {
+  // Create the full set of stars.
+  for (int i = 0; i < NUM_STARS; i++) {
+    stars[i].x    = random(0, worldWidth);   // anywhere in 0..512
+    stars[i].y    = random(0, worldHeight);  // anywhere in 0..512
+    stars[i].size = random(0, 2);            // 1..3 size
+  }
+  // Initially, we have NUM_STARS
+  starCount = NUM_STARS;
+
+  // Now remove any star that lies within the planet's bounding circle.
+  // cullStarsInsidePlanet();
+  
+}
+
+// This function compacts the array so that any star inside the planet is skipped.
+void cullStarsInsidePlanet() {
+  int j = 0;  // index for "kept" stars
+  for (int i = 0; i < starCount; i++) {
+    float dx = stars[i].x - worldCenterX;
+    float dy = stars[i].y - worldCenterY;
+    float distSq = dx * dx + dy * dy;
+
+    // If this star is OUTSIDE the planet's bounding circle, keep it.
+    // If it's inside, skip it.
+    if (distSq >= (planetMaxRadius * planetMaxRadius)) {
+      stars[j] = stars[i];
+      j++;
+    }
+    // otherwise we do nothing, effectively dropping that star.
+  }
+  // Now 'j' is the number of stars we kept
+  starCount = j;
+}
+
+// Draw all stars with parallax. Because they’re "far away," we shift them by
+// cameraX * STAR_PARALLAX instead of cameraX * 1.0.
+void drawStars() {
+  for (int i = 0; i < NUM_STARS; i++) {
+    // starX, starY in world coordinates
+    float starX = stars[i].x;
+    float starY = stars[i].y;
+    int   starSize = stars[i].size;
+
+    // ---------------------------
+    // 1. Check if star is inside the planet's bounding circle
+    // ---------------------------
+    // float dx = starX - worldCenterX;
+    // float dy = starY - worldCenterY;
+    // float distSq = dx * dx + dy * dy;
+    // if (distSq < (planetMaxRadius * planetMaxRadius)) {
+    //   // This star is "behind" the planet, so skip drawing
+    //   continue;
+    // }
+
+    // convert to screen coordinates with parallax factor
+    int screenX = (int)(starX - (cameraX * STAR_PARALLAX));
+    int screenY = (int)(starY - (cameraY * STAR_PARALLAX));
+
+    // Only draw if on screen
+    if (screenX >= 0 && screenX < screenWidth &&
+        screenY >= 0 && screenY < screenHeight) {
+      // A single pixel star (or use fillCircle for a larger dot)
+      // arduboy.drawPixel(screenX, screenY, WHITE);
+      arduboy.fillCircle(screenX, screenY, starSize, WHITE);
+    }
+  }
+}
+
+
+
 // Creates a random point at a given angle and distance from the center.
 Point2D random_point_at_angle(float angle_deg, float min_distance, float max_distance) {
   float angle_rad = angle_deg * (PI / 180.0f);
@@ -80,3 +170,4 @@ void drawShip(float screenX, float screenY, float angle) {
 
   arduboy.drawTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
 }
+

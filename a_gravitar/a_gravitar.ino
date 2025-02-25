@@ -8,6 +8,9 @@ Arduboy2 arduboy;
 // -----------------------
 const int screenWidth  = 128;
 const int screenHeight = 64;
+const int planetMinRadius = 120;
+const int planetMaxRadius = 140;
+const int planetStepAngle = 25;
 
 // Increase the world dimensions to 512×256
 const int worldWidth  = 512;
