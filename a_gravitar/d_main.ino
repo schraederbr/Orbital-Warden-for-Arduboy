@@ -3,7 +3,7 @@
 
 void setup() {
   arduboy.begin();
-  arduboy.setFrameRate(60);
+  arduboy.setFrameRate(120);
 
   randomSeed(analogRead(0));
   circle_points = random_circle(planetStepAngle, planetMinRadius, planetMaxRadius, circle_num_points);

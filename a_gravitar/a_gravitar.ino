@@ -12,13 +12,12 @@ const int planetMinRadius = 60;
 const int planetMaxRadius = 140;
 const int planetStepAngle = 25;
 
-// Increase the world dimensions to 512×256
 const int worldWidth  = 512;
 const int worldHeight = 512;
 
 // Recalculate the world center
-const int worldCenterX = worldWidth  / 2; // 256
-const int worldCenterY = worldHeight / 2; // 128
+const int worldCenterX = worldWidth  / 2; 
+const int worldCenterY = worldHeight / 2; 
 
 // Camera variables (centered on the ship)
 float cameraX = 0;
