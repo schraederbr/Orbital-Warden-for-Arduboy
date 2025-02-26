@@ -138,7 +138,7 @@ Point2D* randomCircle(int angle_step, float min_distance, float max_distance, in
 
 
 void generateTurrets(int numTurrets) {
-  turretCount = 0; // reset
+  turretCount = 0;
   for (int i = 0; i < numTurrets; i++) {
     int turretIndex = random(0, circle_num_points);
     Point2D p1 = circle_points[turretIndex];
@@ -147,20 +147,26 @@ void generateTurrets(int numTurrets) {
     float dx = p2.x - p1.x;
     float dy = p2.y - p1.y;
     float edgeAngle = atan2(dy, dx);
-    float turretAngle = edgeAngle + PI / 2.0;  // or -PI/2
+    float turretAngle = edgeAngle + PI / 2.0;
 
     Point2D turretOffset = randomPointOnLine(p1, p2);
     float worldX = worldCenterX + turretOffset.x;
     float worldY = worldCenterY + turretOffset.y;
 
-    // Fill next spot in turrets array
-    turrets[turretCount].x     = worldX;
-    turrets[turretCount].y     = worldY;
+    turrets[turretCount].x = worldX;
+    turrets[turretCount].y = worldY;
     turrets[turretCount].angle = turretAngle;
+    // Start the turret’s timer so they don’t all fire at once
+    turrets[turretCount].fireTimer = random(0, TURRET_FIRE_DELAY);
     turretCount++;
-    // (Assume numTurrets <= MAX_TURRETS.)
+  }
+
+  // Also init all turret bullets as inactive
+  for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
+    turretBullets[i].active = false;
   }
 }
+
 
 
 void drawAllTurrets() {

@@ -35,14 +35,35 @@ struct Turret {
   float x;
   float y;
   float angle;
+  int   fireTimer;  // counts down; when <= 0, shoot
 };
 Point2D* circle_points = nullptr;
 int circle_num_points  = 0;
 
 const int MAX_TURRETS = 5; // how many stars you want
-int turretCount = 0;
+bool gameOver = false;
+
+// Turret bullet data
+static const int MAX_TURRET_BULLETS = 10;
+
+struct TurretBullet {
+  bool active;
+  float x;
+  float y;
+  float vx;
+  float vy;
+};
+
+TurretBullet turretBullets[MAX_TURRET_BULLETS];
+
+// Each turret also needs a timer for shooting, say it fires every N frames
+// We'll store this in your Turret struct, or a parallel array of timers.
+static const int TURRET_FIRE_DELAY = 120; // frames between shots (~0.5s at 120fps)
+
+
 
 Turret turrets[MAX_TURRETS];
+int turretCount = 0;
 
 
 // Maximum number of on-screen bullets
@@ -84,6 +105,33 @@ void spawnBullet(float x, float y, float angle) {
 }
 
 
+void spawnTurretBullet(float x, float y, float targetX, float targetY) {
+  // Find an inactive slot
+  for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
+    if (!turretBullets[i].active) {
+      turretBullets[i].active = true;
+
+      // Start at turret position
+      turretBullets[i].x = x;
+      turretBullets[i].y = y;
+
+      // Aim at (targetX, targetY)
+      float dx = targetX - x;
+      float dy = targetY - y;
+      float length = sqrt(dx*dx + dy*dy);
+      if (length < 0.001f) {
+        length = 0.001f; // avoid divide by zero
+      }
+
+      float speed = 0.5f; // adjust bullet speed as desired
+      turretBullets[i].vx = (dx / length) * speed;
+      turretBullets[i].vy = (dy / length) * speed;
+
+      // Done
+      break;
+    }
+  }
+}
 
 
 

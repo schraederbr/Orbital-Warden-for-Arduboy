@@ -33,6 +33,71 @@ void setup() {
     bullets[i].active = false;
   }
 }
+void updateTurrets() {
+  // For each turret
+  for (int t = 0; t < turretCount; t++) {
+    // Decrement fireTimer
+    turrets[t].fireTimer--;
+
+    // If time to shoot, spawn a bullet
+    if (turrets[t].fireTimer <= 0) {
+      // reset timer
+      turrets[t].fireTimer = TURRET_FIRE_DELAY;
+      // aim at player
+      spawnTurretBullet(turrets[t].x, 
+                        turrets[t].y, 
+                        shipX,    // player's position
+                        shipY);
+    }
+  }
+}
+
+void updateTurretBullets() {
+  if (gameOver) return; // no need if game stops updating on gameOver
+
+  for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
+    if (turretBullets[i].active) {
+      // Move bullet
+      turretBullets[i].x += turretBullets[i].vx;
+      turretBullets[i].y += turretBullets[i].vy;
+
+      // Check if out of world, deactivate
+      if (turretBullets[i].x < 0 || turretBullets[i].x > worldWidth ||
+          turretBullets[i].y < 0 || turretBullets[i].y > worldHeight) {
+        turretBullets[i].active = false;
+        continue;
+      }
+
+      // Check collision with player
+      // Suppose the player's radius is ~3 or 4, or just do a point collision 
+      // if your ship is small. We'll do a small threshold:
+      float dx = turretBullets[i].x - shipX;
+      float dy = turretBullets[i].y - shipY;
+      float distSq = dx*dx + dy*dy;
+      float collideRadius = 5.0f;   // tweak as needed
+      if (distSq < (collideRadius * collideRadius)) {
+        // Hit the player!
+        gameOver = true;
+        // Deactivate bullet
+        turretBullets[i].active = false;
+        // Optionally break out altogether,
+        // or just let the rest keep updating.
+      }
+    }
+  }
+}
+
+void drawTurretBullets() {
+  for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
+    if (turretBullets[i].active) {
+      float bx = turretBullets[i].x - cameraX;
+      float by = turretBullets[i].y - cameraY;
+      // Draw as a small dot
+      arduboy.drawPixel((int)bx, (int)by, WHITE);
+      // Or arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
+    }
+  }
+}
 
 void loop() {
   if (!arduboy.nextFrame()) return;
@@ -131,11 +196,13 @@ void loop() {
       }
     }
   }
-
+  updateTurrets();
+  updateTurretBullets();
   // --- 5. Draw Everything ---
 
   // Stars (background, parallax)
   drawStars();
+  drawTurretBullets();
 
   // Planet circle (optional regen with some other input if you like)
   if (circle_points != nullptr) {
