@@ -31,12 +31,17 @@ struct Point2D {
   float y;
 };
 
+struct Turret {
+  float x;
+  float y;
+  float angle;
+};
 Point2D* circle_points = nullptr;
 int circle_num_points  = 0;
 
 const int NUM_TURRETS = 5; // how many stars you want
 
-Point2D turrets[NUM_TURRETS];
+Turret turrets[NUM_TURRETS];
 
 
 // Returns a random float in [min_val, max_val].

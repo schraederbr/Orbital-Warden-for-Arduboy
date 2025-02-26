@@ -8,7 +8,7 @@
 // -------------------------
 // Stars (Background)
 // -------------------------
-static const int NUM_STARS = 100; // how many stars you want
+static const int NUM_STARS = 50; // how many stars you want
 struct Star {
   float x;
   float y;
@@ -134,19 +134,57 @@ Point2D* randomCircle(int angle_step, float min_distance, float max_distance, in
 
   return points;
 }
-//These coordinates could be off
-void generateTurrets(int numTurrets){
-  for(int i = 0; i < numTurrets; i++){
-    int turretIndex = random(0,circle_num_points);
+
+
+
+void generateTurrets(int numTurrets) {
+  for (int i = 0; i < numTurrets; i++) {
+    int turretIndex = random(0, circle_num_points);
+
     Point2D p1 = circle_points[turretIndex];
-    Point2D p2 = circle_points[0];
-    if(turretIndex != circle_num_points){
-      Point2D p2 = circle_points[turretIndex+1];
-    }
-    Point2D turretPosition = randomPointOnLine(p1,p2);
-    turrets[i] = turretPosition;
-  }
+    // fix an off-by-one boundary check
+    Point2D p2 = circle_points[(turretIndex + 1) % circle_num_points];
+    float dx = p2.x - p1.x;
+    float dy = p2.y - p1.y;
+    float edgeAngle = atan2(dy, dx);
+
+    // Then offset by +π/2 (or −π/2) to be perpendicular
+    float turretAngle = edgeAngle;
+    Point2D turretOffset = randomPointOnLine(p1, p2);
     
+    // Convert offset to absolute by adding the planet's center
+    turrets[i].x = worldCenterX + turretOffset.x;
+    turrets[i].y = worldCenterY + turretOffset.y;
+    turrets[i].angle = turretAngle;
+  }
+}
+
+
+void drawAllTurrets() {
+  for (int i = 0; i < NUM_TURRETS; i++) {
+    float pivotX = turrets[i].x - cameraX; // pivot = planet perimeter
+    float pivotY = turrets[i].y - cameraY;
+    float angle  = turrets[i].angle;       // tangent + π/2 (or however you computed)
+
+    float turretW = 4.0;  // or whatever size
+    float turretH = 8.0;  // for example
+
+    // Half-sizes
+    float halfW = turretW * 0.5;
+    float halfH = turretH * 0.5;
+
+    // We want the rectangle's bottom edge at the pivot. 
+    // In local coords, that bottom edge = +halfH.
+    // So we shift the center by (0, -halfH) in local space, then rotate it.
+    float offsetX =  (0.0f) * cos(angle) - (-halfH) * sin(angle);
+    float offsetY =  (0.0f) * sin(angle) + (-halfH) * cos(angle);
+
+    float centerX = pivotX + offsetX;
+    float centerY = pivotY + offsetY;
+
+    // Now draw the rectangle with its center at (centerX, centerY) and rotation = angle
+    drawRotatedRect(centerX, centerY, turretW, turretH, angle);
+  }
 }
 
 
@@ -246,10 +284,10 @@ void drawRotatedRect(float screenX, float screenY, float width, float height, fl
   int iy4 = (int)(screenY + ry4);
 
   // Draw the edges of the rectangle (4 lines)
-  // arduboy.drawLine(ix1, iy1, ix2, iy2, WHITE);
-  // arduboy.drawLine(ix2, iy2, ix3, iy3, WHITE);
-  // arduboy.drawLine(ix3, iy3, ix4, iy4, WHITE);
-  // arduboy.drawLine(ix4, iy4, ix1, iy1, WHITE);
+  arduboy.drawLine(ix1, iy1, ix2, iy2, WHITE);
+  arduboy.drawLine(ix2, iy2, ix3, iy3, WHITE);
+  arduboy.drawLine(ix3, iy3, ix4, iy4, WHITE);
+  arduboy.drawLine(ix4, iy4, ix1, iy1, WHITE);
 }
 
 

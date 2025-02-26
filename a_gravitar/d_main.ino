@@ -2,11 +2,23 @@
 #include <math.h>
 
 void setup() {
+  Serial.begin(9600);
+  delay(2000);
   arduboy.begin();
   arduboy.setFrameRate(120);
 
   randomSeed(analogRead(0));
   circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius, circle_num_points);
+  
+  // for (int i = 0; i < circle_num_points; i++) {
+  //   Serial.print("Point ");
+  //   Serial.print(i);
+  //   Serial.print(": (");
+  //   Serial.print(circle_points[i].x);
+  //   Serial.print(", ");
+  //   Serial.print(circle_points[i].y);
+  //   Serial.println(")");
+  // }
   generateTurrets(NUM_TURRETS);
   generateStars();
   // Start the ship somewhere in the world. For demonstration, let's put it in the middle
@@ -80,6 +92,7 @@ void loop() {
       delete[] circle_points;
     }
     circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius, circle_num_points);
+    generateTurrets(NUM_TURRETS);
   }
 
   // --- 4. Draw the Random Circle ---
@@ -97,17 +110,23 @@ void loop() {
   //My coordinates seem to be off
 
   if(turrets != nullptr){
-    for(int i = 0; i < NUM_TURRETS; i++){
-      float sX = turrets[i].x - cameraX;
-      float sY = turrets[i].y - cameraY;
-      drawRotatedRect(sX, sY, 1.0,1.0,1.5);
-    }
+    drawAllTurrets();
+    // for(int i = 0; i < NUM_TURRETS; i++){
+    //   float sX = turrets[i].x - cameraX;
+    //   float sY = turrets[i].y - cameraY;
+    //   drawRotatedRect(sX, sY, 8,4, turrets[i].angle);
+    // }
   }
 
   // --- 5. Draw the Ship ---
   // Convert world position to screen position
   float screenShipX = shipX - cameraX;
   float screenShipY = shipY - cameraY;
+  // Serial.print("ship: ");
+  // Serial.print(screenShipX);
+  // Serial.print(",");
+  // Serial.print(screenShipY);
+  // Serial.print("\n");
   drawShip(screenShipX, screenShipY, shipAngle);
   arduboy.print(starCount);
   arduboy.display();
