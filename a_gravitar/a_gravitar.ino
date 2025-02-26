@@ -39,9 +39,53 @@ struct Turret {
 Point2D* circle_points = nullptr;
 int circle_num_points  = 0;
 
-const int NUM_TURRETS = 5; // how many stars you want
+const int MAX_TURRETS = 5; // how many stars you want
+int turretCount = 0;
 
-Turret turrets[NUM_TURRETS];
+Turret turrets[MAX_TURRETS];
+
+
+// Maximum number of on-screen bullets
+static const int MAX_BULLETS = 5;
+
+// Simple bullet structure
+struct Bullet {
+  bool active;  // Is this bullet slot in use?
+  float x;      // World position
+  float y;      // World position
+  float vx;     // Velocity X
+  float vy;     // Velocity Y
+};
+
+// The global array of bullets
+Bullet bullets[MAX_BULLETS];
+
+void spawnBullet(float x, float y, float angle) {
+  // Look for an inactive bullet slot
+  for (int i = 0; i < MAX_BULLETS; i++) {
+    if (!bullets[i].active) {
+      // Activate and position it
+      bullets[i].active = true;
+      bullets[i].x      = x;
+      bullets[i].y      = y;
+
+      // Decide bullet speed
+      float bulletSpeed = 1.0f;  // tweak as you wish
+
+      // We want bullet direction to match the ship’s facing
+      // Remember your code does "shipAngle = 0 => up," so we use (angle - PI/2)
+      bullets[i].vx = cos(angle - PI / 2) * bulletSpeed;
+      bullets[i].vy = sin(angle - PI / 2) * bulletSpeed;
+
+      // Stop after spawning 1 bullet
+      break;
+    }
+  }
+}
+
+
+
+
 
 
 // Returns a random float in [min_val, max_val].

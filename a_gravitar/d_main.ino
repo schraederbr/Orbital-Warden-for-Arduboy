@@ -19,7 +19,7 @@ void setup() {
   //   Serial.print(circle_points[i].y);
   //   Serial.println(")");
   // }
-  generateTurrets(NUM_TURRETS);
+  generateTurrets(MAX_TURRETS);
   generateStars();
   // Start the ship somewhere in the world. For demonstration, let's put it in the middle
   shipX     = worldWidth / 2;   
@@ -27,107 +27,144 @@ void setup() {
   shipAngle = 0;
   velX      = 0;
   velY      = 0;
+
+  // Initialize bullets array
+  for (int i = 0; i < MAX_BULLETS; i++) {
+    bullets[i].active = false;
+  }
 }
 
 void loop() {
   if (!arduboy.nextFrame()) return;
   arduboy.pollButtons();
   arduboy.clear();
-  // for(int i = 0; i < NUM_TURRETS; i++){
-  //   arduboy.print(turrets[i].x);
-  //   arduboy.print(",");
-  //   arduboy.print(turrets[i].y);
-  //   arduboy.print("\n");
-  // }
-  // arduboy.display();
-  // while(true){
-
-  // }
 
   // --- 1. Ship Controls ---
-  // Rotate
   if (arduboy.pressed(LEFT_BUTTON)) {
     shipAngle -= ROTATION_SPEED;
   }
   if (arduboy.pressed(RIGHT_BUTTON)) {
     shipAngle += ROTATION_SPEED;
   }
-
-  // Thrust
   if (arduboy.pressed(A_BUTTON)) {
-    // angle 0 = up, so subtract PI/2
     velX += cos(shipAngle - PI / 2) * ACCELERATION;
     velY += sin(shipAngle - PI / 2) * ACCELERATION;
   }
 
-  // Update position
+  // Update ship
   shipX += velX;
   shipY += velY;
+  velX   *= FRICTION;
+  velY   *= FRICTION;
 
-  // Friction
-  velX *= FRICTION;
-  velY *= FRICTION;
-
-  // Clamp within 512×256 world
+  // Clamp ship in world
   if (shipX < 0) shipX = 0;
   if (shipX > worldWidth)  shipX = worldWidth;
   if (shipY < 0) shipY = 0;
   if (shipY > worldHeight) shipY = worldHeight;
 
-  // --- 2. Camera Calculation ---
-  cameraX = shipX - (screenWidth  / 2);
+  // --- 2. Camera ---
+  cameraX = shipX - (screenWidth / 2);
   cameraY = shipY - (screenHeight / 2);
-
-  // Clamp camera so it doesn’t go beyond world edges
   if (cameraX < 0) cameraX = 0;
   if (cameraX > (worldWidth  - screenWidth))  cameraX = worldWidth  - screenWidth;
   if (cameraY < 0) cameraY = 0;
   if (cameraY > (worldHeight - screenHeight)) cameraY = worldHeight - screenHeight;
 
-  drawStars();
-
-  // --- 3. Generate a new circle (optional) ---
+  // --- 3. Shooting Bullets on B Press ---
   if (arduboy.justPressed(B_BUTTON)) {
-    if (circle_points != nullptr) {
-      delete[] circle_points;
-    }
-    circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius, circle_num_points);
-    generateTurrets(NUM_TURRETS);
+    // Instead of re-generating planet, spawn a bullet
+    spawnBullet(shipX, shipY, shipAngle);
   }
 
-  // --- 4. Draw the Random Circle ---
+  // --- 4. Update Bullets ---
+  for (int i = 0; i < MAX_BULLETS; i++) {
+    if (bullets[i].active) {
+      // Move bullet
+      bullets[i].x += bullets[i].vx;
+      bullets[i].y += bullets[i].vy;
+
+      // Optionally deactivate if off-screen or out of world
+      if (bullets[i].x < 0 || bullets[i].x > worldWidth ||
+          bullets[i].y < 0 || bullets[i].y > worldHeight) {
+        bullets[i].active = false;
+      }
+    }
+  }
+
+  // Check collision with turrets
+  for (int i = 0; i < MAX_BULLETS; i++) {
+    if (bullets[i].active) {
+      // 1. Move the bullet
+      bullets[i].x += bullets[i].vx;
+      bullets[i].y += bullets[i].vy;
+
+      // 2. Deactivate if off-screen or out of world
+      if (bullets[i].x < 0 || bullets[i].x > worldWidth ||
+          bullets[i].y < 0 || bullets[i].y > worldHeight) {
+        bullets[i].active = false;
+      }
+      else {
+        // 3. Check collision with each turret
+        for (int t = 0; t < MAX_TURRETS; t++) {
+          float dx = bullets[i].x - turrets[t].x;
+          float dy = bullets[i].y - turrets[t].y;
+          // Distance squared
+          float distSq = dx * dx + dy * dy;
+
+          // Compare to a threshold radius squared.
+          // If your turrets are drawn 4×4, a radius of ~2 might suffice.
+          // For safety, let's use 16 (so radius = 4).
+          if (distSq < 22.0f) {
+            // Destroy bullet
+            bullets[i].active = false;
+            turretCount--;
+            turrets[t] = turrets[turretCount];
+            // If you ALSO want the turret destroyed, 
+            // add code here like:
+            // turrets[t].active = false; // (You'd need an 'active' flag for turrets too.)
+
+            // Break out of the turret loop
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // --- 5. Draw Everything ---
+
+  // Stars (background, parallax)
+  drawStars();
+
+  // Planet circle (optional regen with some other input if you like)
   if (circle_points != nullptr) {
-    // Draw each point as a small dot
     for (int i = 0; i < circle_num_points; i++) {
       int x = (int)((worldCenterX + circle_points[i].x) - cameraX);
       int y = (int)((worldCenterY + circle_points[i].y) - cameraY);
       arduboy.fillCircle(x, y, 1, WHITE);
     }
-    // Draw connected lines (closing the shape)
     drawLines(circle_points, circle_num_points, true);
   }
 
-  //My coordinates seem to be off
+  drawAllTurrets();
 
-  if(turrets != nullptr){
-    drawAllTurrets();
-    // for(int i = 0; i < NUM_TURRETS; i++){
-    //   float sX = turrets[i].x - cameraX;
-    //   float sY = turrets[i].y - cameraY;
-    //   drawRotatedRect(sX, sY, 8,4, turrets[i].angle);
-    // }
+  // Draw Bullets
+  for (int i = 0; i < MAX_BULLETS; i++) {
+    if (bullets[i].active) {
+      // Convert bullet position from world coords to screen coords
+      float bx = bullets[i].x - cameraX;
+      float by = bullets[i].y - cameraY;
+      // Draw a pixel or small circle for the bullet
+      arduboy.drawPixel((int)bx, (int)by, WHITE);
+      // Or arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
+    }
   }
 
-  // --- 5. Draw the Ship ---
-  // Convert world position to screen position
+  // Draw the ship
   float screenShipX = shipX - cameraX;
   float screenShipY = shipY - cameraY;
-  // Serial.print("ship: ");
-  // Serial.print(screenShipX);
-  // Serial.print(",");
-  // Serial.print(screenShipY);
-  // Serial.print("\n");
   drawShip(screenShipX, screenShipY, shipAngle);
-  arduboy.print(starCount);
+
   arduboy.display();
 }

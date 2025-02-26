@@ -8,7 +8,7 @@
 // -------------------------
 // Stars (Background)
 // -------------------------
-static const int NUM_STARS = 50; // how many stars you want
+static const int NUM_STARS = 5; // how many stars you want
 struct Star {
   float x;
   float y;
@@ -138,33 +138,36 @@ Point2D* randomCircle(int angle_step, float min_distance, float max_distance, in
 
 
 void generateTurrets(int numTurrets) {
+  turretCount = 0; // reset
   for (int i = 0; i < numTurrets; i++) {
     int turretIndex = random(0, circle_num_points);
-
     Point2D p1 = circle_points[turretIndex];
-    // fix an off-by-one boundary check
     Point2D p2 = circle_points[(turretIndex + 1) % circle_num_points];
+
     float dx = p2.x - p1.x;
     float dy = p2.y - p1.y;
     float edgeAngle = atan2(dy, dx);
+    float turretAngle = edgeAngle + PI / 2.0;  // or -PI/2
 
-    // Then offset by +π/2 (or −π/2) to be perpendicular
-    float turretAngle = edgeAngle;
     Point2D turretOffset = randomPointOnLine(p1, p2);
-    
-    // Convert offset to absolute by adding the planet's center
-    turrets[i].x = worldCenterX + turretOffset.x;
-    turrets[i].y = worldCenterY + turretOffset.y;
-    turrets[i].angle = turretAngle;
+    float worldX = worldCenterX + turretOffset.x;
+    float worldY = worldCenterY + turretOffset.y;
+
+    // Fill next spot in turrets array
+    turrets[turretCount].x     = worldX;
+    turrets[turretCount].y     = worldY;
+    turrets[turretCount].angle = turretAngle;
+    turretCount++;
+    // (Assume numTurrets <= MAX_TURRETS.)
   }
 }
 
 
 void drawAllTurrets() {
-  for (int i = 0; i < NUM_TURRETS; i++) {
+  for (int i = 0; i < turretCount; i++) {
     float pivotX = turrets[i].x - cameraX; // pivot = planet perimeter
     float pivotY = turrets[i].y - cameraY;
-    float angle  = turrets[i].angle;       // tangent + π/2 (or however you computed)
+    float angle  = turrets[i].angle - PI/2;       // tangent + π/2 (or however you computed)
 
     float turretW = 4.0;  // or whatever size
     float turretH = 8.0;  // for example
