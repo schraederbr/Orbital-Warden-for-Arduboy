@@ -120,29 +120,25 @@ void drawPlanet(bool drawDots = false, bool drawLines = true, bool drawTriangles
   }
   
   // Draw planet as filled in triangles
-  if(drawTriangles){
-  // 1. Compute centroid
-    float sumX = 0;
-    float sumY = 0;
-    for (int i = 0; i < circle_num_points; i++) {
-      sumX += circle_points[i].x;
-      sumY += circle_points[i].y;
-    }
-    float cx = float(sumX) / circle_num_points;
-    float cy = float(sumY) / circle_num_points;
-    for (int i = 0; i < circle_num_points; i++) {
-        // Current vertex
-        int x1 = (int)(worldCenterX + circle_points[i].x - cameraX);
-        int y1 = (int)(worldCenterY + circle_points[i].y - cameraY);
+  if (drawTriangles) {
+      // 1. Convert all world-space points to screen-space **once** before the loop
+      static int tx[circle_num_points]; // Store transformed X coordinates
+      static int ty[circle_num_points]; // Store transformed Y coordinates
 
-        // Next vertex (wrap around using % n)
-        int x2 = (int)(worldCenterX + circle_points[(i + 1) % circle_num_points].x - cameraX);
-        int y2 = (int)(worldCenterY + circle_points[(i + 1) % circle_num_points].y - cameraY);
-
-        // 2. Draw triangle from centroid to each pair of polygon vertices
-        arduboy.fillTriangle(cx, cy, x1, y1, x2, y2, WHITE);
+      for (int i = 0; i < circle_num_points; i++) {
+          tx[i] = (int)(worldCenterX + circle_points[i].x - cameraX);
+          ty[i] = (int)(worldCenterY + circle_points[i].y - cameraY);
       }
+
+      // 3. Iterate through edges and draw triangles
+      for (int i = 0; i < circle_num_points - 1; i++) {
+          arduboy.fillTriangle(circleCenterX, circleCenterY, tx[i], ty[i], tx[i + 1], ty[i + 1], WHITE);
+      }
+
+      // 4. Close the loop: draw last triangle (avoids modulo)
+      arduboy.fillTriangle(circleCenterX, circleCenterY, tx[circle_num_points - 1], ty[circle_num_points - 1], tx[0], ty[0], WHITE);
   }
+
   
     
 
@@ -151,7 +147,7 @@ void drawPlanet(bool drawDots = false, bool drawLines = true, bool drawTriangles
 void fillPolygonHorizontal(const int *px, const int *py, int n) {
   if (n < 3) return;
 
-  // 1. Find the bounding box in Y
+  // 1. Find bounding box in Y
   int minY = py[0];
   int maxY = py[0];
   for (int i = 1; i < n; i++) {
@@ -159,81 +155,80 @@ void fillPolygonHorizontal(const int *px, const int *py, int n) {
     if (py[i] > maxY) maxY = py[i];
   }
 
-  // Clamp to screen bounds [0..(HEIGHT-1)]
+  // Clamp to screen bounds [0..HEIGHT-1]
   if (minY < 0) minY = 0;
   if (maxY >= HEIGHT) maxY = HEIGHT - 1;
 
   // Temporary array for storing intersection X coords
-  // (In worst case, every edge can intersect the scanline once,
-  //  so we can have up to n intersection points.)
-  static int xIntersections[circle_num_points];
+  static int xIntersections[256]; // must be >= max number of edges
 
-  // 2. For each scanline y from minY to maxY
+  // 2. For each scanline y in [minY .. maxY]
   for (int y = minY; y <= maxY; y++) {
     int numIntersections = 0;
 
-    // 2a. Go through each edge (p[i], p[i+1])
+    // Scan all edges
     for (int i = 0; i < n; i++) {
       int j = (i + 1) % n; // next vertex index
+
+      // Retrieve edge endpoints
       int y1 = py[i], y2 = py[j];
       int x1 = px[i], x2 = px[j];
 
-      // Ensure y1 <= y2 for convenience
+      // Skip horizontal edges
+      if (y1 == y2) continue;
+
+      // Order y1 <= y2
       if (y1 > y2) {
-        // Swap them
         int tmp = y1; y1 = y2; y2 = tmp;
         tmp = x1; x1 = x2; x2 = tmp;
       }
 
-      // Check if scanline y intersects the edge [y1..y2]
+      // Check if this scanline intersects [y1..y2)
       if (y >= y1 && y < y2) {
-        // Edge is not horizontal; compute intersection
-        // Ratio along the edge from y1 to y2
-        // (y2 - y1) is guaranteed not to be 0 here because we skip horizontal edges
-        float t = (float)(y - y1) / (float)(y2 - y1);
-        // Interpolated x
-        int xHit = (int)(x1 + t * (x2 - x1));
+        // Integer interpolation:
+        // xHit = x1 + ((x2 - x1)*(y - y1)) / (y2 - y1)
+        int dy1 = y - y1;
+        int dy  = (y2 - y1);
+        // Use 32-bit for multiplication to avoid 16-bit overflow
+        int32_t dx = (int32_t)(x2 - x1) * (int32_t)dy1;
 
-        // Store intersection
+        int xHit = x1 + (int)(dx / dy);
+
         xIntersections[numIntersections++] = xHit;
       }
-      // If y == y2 exactly, we skip it or treat differently to avoid double counting
-      // (common in standard scanline fill algorithms).
-      // Here we skip if y == y2, but include if y == y1. 
-      // That ensures we only count each edge once per scanline.
-    } // end edge loop
+    }
 
     // If no intersections, skip
     if (numIntersections < 2) continue;
 
-    // 2b. Sort intersection X coords
-    for (int i = 0; i < numIntersections - 1; i++) {
-      for (int j = i + 1; j < numIntersections; j++) {
-        if (xIntersections[j] < xIntersections[i]) {
-          int temp = xIntersections[i];
-          xIntersections[i] = xIntersections[j];
-          xIntersections[j] = temp;
-        }
+    // 2b. Sort intersection X coords (Insertion sort here for example)
+    for (int i = 1; i < numIntersections; i++) {
+      int key = xIntersections[i];
+      int j = i - 1;
+      while (j >= 0 && xIntersections[j] > key) {
+        xIntersections[j + 1] = xIntersections[j];
+        j--;
       }
+      xIntersections[j + 1] = key;
     }
 
-    // 2c. Draw horizontal lines between pairs: (x0,x1), (x2,x3), ...
+    // 2c. Draw horizontal line segments
     for (int i = 0; i < numIntersections - 1; i += 2) {
       int xStart = xIntersections[i];
       int xEnd   = xIntersections[i + 1];
 
-      // Clip to screen [0..(WIDTH-1)]
+      // Clip horizontally
       if (xEnd < 0 || xStart >= WIDTH) {
         continue;
       }
       if (xStart < 0) xStart = 0;
       if (xEnd >= WIDTH) xEnd = WIDTH - 1;
 
-      // Draw horizontal line from xStart to xEnd at this y
       arduboy.drawFastHLine(xStart, y, (xEnd - xStart + 1), WHITE);
     }
-  } // end for y
+  }
 }
+
 
 // Creates a random point at a given angle and distance from the center.
 Point2D randomPointAtAngle(float angle_deg, float min_distance, float max_distance) {
@@ -274,7 +269,15 @@ Point2D* randomCircle(int angle_step, float min_distance, float max_distance) {
 
     points[i] = pt;
   }
-
+  // 1. Compute centroid
+  float sumX = 0;
+  float sumY = 0;
+  for (int i = 0; i < circle_num_points; i++) {
+    sumX += points[i].x;
+    sumY += points[i].y;
+  }
+  circleCenterX = (int)(float(sumX) / circle_num_points);
+  circleCenterY = (int)(float(sumY) / circle_num_points);
   return points;
 }
 

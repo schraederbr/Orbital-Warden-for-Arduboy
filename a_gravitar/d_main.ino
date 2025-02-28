@@ -205,7 +205,7 @@ void loop() {
   drawTurretBullets();
 
   // Planet circle (optional regen with some other input if you like)
-  drawPlanet(false, false, false, true);
+  drawPlanet(false, true, false, false);
 
   drawAllTurrets();
 

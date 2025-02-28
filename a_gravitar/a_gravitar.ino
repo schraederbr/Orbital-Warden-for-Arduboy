@@ -39,7 +39,9 @@ struct Turret {
 };
 Point2D* circle_points = nullptr;
 const int circle_num_points  = (int)(360 / planetStepAngle);
-
+//Might want these to be float
+int circleCenterX = 0;
+int circleCenterY = 0;
 const int MAX_TURRETS = 5; // how many stars you want
 bool gameOver = false;
 
