@@ -53,7 +53,7 @@ void updateTurrets() {
 }
 
 void updateTurretBullets() {
-  if (gameOver) return; // no need if game stops updating on gameOver
+  // if (gameOver) return; // no need if game stops updating on gameOver
 
   for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
     if (turretBullets[i].active) {
@@ -77,7 +77,8 @@ void updateTurretBullets() {
       float collideRadius = 5.0f;   // tweak as needed
       if (distSq < (collideRadius * collideRadius)) {
         // Hit the player!
-        gameOver = true;
+        arduboy.print("Hit!");
+        // gameOver = true;
         // Deactivate bullet
         turretBullets[i].active = false;
         // Optionally break out altogether,
