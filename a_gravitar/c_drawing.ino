@@ -8,7 +8,7 @@
 // -------------------------
 // Stars (Background)
 // -------------------------
-static const int NUM_STARS = 5; // how many stars you want
+static const int NUM_STARS = 1; // how many stars you want
 struct Star {
   float x;
   float y;
@@ -88,8 +88,152 @@ void drawStars() {
     }
   }
 }
+void drawPlanet(bool drawDots = false, bool drawLines = true, bool drawTriangles = false, bool drawHorizontalLines = false){
+  //Draw dots where lines connect
+  if(drawDots){
+    for (int i = 0; i < circle_num_points; i++) {
+      int x = (int)((worldCenterX + circle_points[i].x) - cameraX);
+      int y = (int)((worldCenterY + circle_points[i].y) - cameraY);
+      arduboy.fillCircle(x, y, 1, WHITE);
+    }
+  }
 
+  // Draw planet as lines
+  if(drawLines){
+    drawPolygonLines(circle_points, circle_num_points, true);
+  }
+      
+    
+  if(drawHorizontalLines){
+    static int tx[circle_num_points]; // or some safe max; must >= circle_num_points
+    static int ty[circle_num_points];
 
+    for (int i = 0; i < circle_num_points; i++) {
+      tx[i] = (int)(worldCenterX + circle_points[i].x - cameraX);
+      ty[i] = (int)(worldCenterY + circle_points[i].y - cameraY);
+    }
+
+    //--------------------------------------------------------------------------
+    // 4. Fill the polygon by horizontal scan lines
+    //--------------------------------------------------------------------------
+    fillPolygonHorizontal(tx, ty, circle_num_points);
+  }
+  
+  // Draw planet as filled in triangles
+  if(drawTriangles){
+  // 1. Compute centroid
+    float sumX = 0;
+    float sumY = 0;
+    for (int i = 0; i < circle_num_points; i++) {
+      sumX += circle_points[i].x;
+      sumY += circle_points[i].y;
+    }
+    float cx = float(sumX) / circle_num_points;
+    float cy = float(sumY) / circle_num_points;
+    for (int i = 0; i < circle_num_points; i++) {
+        // Current vertex
+        int x1 = (int)(worldCenterX + circle_points[i].x - cameraX);
+        int y1 = (int)(worldCenterY + circle_points[i].y - cameraY);
+
+        // Next vertex (wrap around using % n)
+        int x2 = (int)(worldCenterX + circle_points[(i + 1) % circle_num_points].x - cameraX);
+        int y2 = (int)(worldCenterY + circle_points[(i + 1) % circle_num_points].y - cameraY);
+
+        // 2. Draw triangle from centroid to each pair of polygon vertices
+        arduboy.fillTriangle(cx, cy, x1, y1, x2, y2, WHITE);
+      }
+  }
+  
+    
+
+}
+
+void fillPolygonHorizontal(const int *px, const int *py, int n) {
+  if (n < 3) return;
+
+  // 1. Find the bounding box in Y
+  int minY = py[0];
+  int maxY = py[0];
+  for (int i = 1; i < n; i++) {
+    if (py[i] < minY) minY = py[i];
+    if (py[i] > maxY) maxY = py[i];
+  }
+
+  // Clamp to screen bounds [0..(HEIGHT-1)]
+  if (minY < 0) minY = 0;
+  if (maxY >= HEIGHT) maxY = HEIGHT - 1;
+
+  // Temporary array for storing intersection X coords
+  // (In worst case, every edge can intersect the scanline once,
+  //  so we can have up to n intersection points.)
+  static int xIntersections[circle_num_points];
+
+  // 2. For each scanline y from minY to maxY
+  for (int y = minY; y <= maxY; y++) {
+    int numIntersections = 0;
+
+    // 2a. Go through each edge (p[i], p[i+1])
+    for (int i = 0; i < n; i++) {
+      int j = (i + 1) % n; // next vertex index
+      int y1 = py[i], y2 = py[j];
+      int x1 = px[i], x2 = px[j];
+
+      // Ensure y1 <= y2 for convenience
+      if (y1 > y2) {
+        // Swap them
+        int tmp = y1; y1 = y2; y2 = tmp;
+        tmp = x1; x1 = x2; x2 = tmp;
+      }
+
+      // Check if scanline y intersects the edge [y1..y2]
+      if (y >= y1 && y < y2) {
+        // Edge is not horizontal; compute intersection
+        // Ratio along the edge from y1 to y2
+        // (y2 - y1) is guaranteed not to be 0 here because we skip horizontal edges
+        float t = (float)(y - y1) / (float)(y2 - y1);
+        // Interpolated x
+        int xHit = (int)(x1 + t * (x2 - x1));
+
+        // Store intersection
+        xIntersections[numIntersections++] = xHit;
+      }
+      // If y == y2 exactly, we skip it or treat differently to avoid double counting
+      // (common in standard scanline fill algorithms).
+      // Here we skip if y == y2, but include if y == y1. 
+      // That ensures we only count each edge once per scanline.
+    } // end edge loop
+
+    // If no intersections, skip
+    if (numIntersections < 2) continue;
+
+    // 2b. Sort intersection X coords
+    for (int i = 0; i < numIntersections - 1; i++) {
+      for (int j = i + 1; j < numIntersections; j++) {
+        if (xIntersections[j] < xIntersections[i]) {
+          int temp = xIntersections[i];
+          xIntersections[i] = xIntersections[j];
+          xIntersections[j] = temp;
+        }
+      }
+    }
+
+    // 2c. Draw horizontal lines between pairs: (x0,x1), (x2,x3), ...
+    for (int i = 0; i < numIntersections - 1; i += 2) {
+      int xStart = xIntersections[i];
+      int xEnd   = xIntersections[i + 1];
+
+      // Clip to screen [0..(WIDTH-1)]
+      if (xEnd < 0 || xStart >= WIDTH) {
+        continue;
+      }
+      if (xStart < 0) xStart = 0;
+      if (xEnd >= WIDTH) xEnd = WIDTH - 1;
+
+      // Draw horizontal line from xStart to xEnd at this y
+      arduboy.drawFastHLine(xStart, y, (xEnd - xStart + 1), WHITE);
+    }
+  } // end for y
+}
 
 // Creates a random point at a given angle and distance from the center.
 Point2D randomPointAtAngle(float angle_deg, float min_distance, float max_distance) {
@@ -102,12 +246,11 @@ Point2D randomPointAtAngle(float angle_deg, float min_distance, float max_distan
 }
 
 // Generates an array of slightly irregular points forming a "random circle."
-Point2D* randomCircle(int angle_step, float min_distance, float max_distance, int &num_points) {
+Point2D* randomCircle(int angle_step, float min_distance, float max_distance) {
   // We still produce approximately (360 / angle_step) points:
-  num_points = 360 / angle_step;
-  Point2D* points = new Point2D[num_points];
+  Point2D* points = new Point2D[circle_num_points];
 
-  for (int i = 0; i < num_points; i++) {
+  for (int i = 0; i < circle_num_points; i++) {
     // Base angle for this index
     int baseAngle = i * angle_step;
 
@@ -199,7 +342,7 @@ void drawAllTurrets() {
 
 // Draw lines connecting the points in "circle_points" (in world space).
 // We subtract cameraX/cameraY so they appear correctly on the screen.
-void drawLines(Point2D* points, int num_points, bool close_shape) {
+void drawPolygonLines(Point2D* points, int num_points, bool close_shape) {
   if (num_points <= 0) return;
 
   int prevX = (int)(worldCenterX + points[0].x - cameraX);

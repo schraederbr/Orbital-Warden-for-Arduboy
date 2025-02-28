@@ -5,10 +5,10 @@ void setup() {
   Serial.begin(9600);
   delay(2000);
   arduboy.begin();
-  arduboy.setFrameRate(120);
+  arduboy.setFrameRate(60);
 
   randomSeed(analogRead(0));
-  circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius, circle_num_points);
+  circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
   
   // for (int i = 0; i < circle_num_points; i++) {
   //   Serial.print("Point ");
@@ -205,14 +205,7 @@ void loop() {
   drawTurretBullets();
 
   // Planet circle (optional regen with some other input if you like)
-  if (circle_points != nullptr) {
-    for (int i = 0; i < circle_num_points; i++) {
-      int x = (int)((worldCenterX + circle_points[i].x) - cameraX);
-      int y = (int)((worldCenterY + circle_points[i].y) - cameraY);
-      arduboy.fillCircle(x, y, 1, WHITE);
-    }
-    drawLines(circle_points, circle_num_points, true);
-  }
+  drawPlanet(false, false, false, true);
 
   drawAllTurrets();
 

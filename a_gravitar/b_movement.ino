@@ -9,5 +9,5 @@ float shipAngle;      // Ship’s facing angle in radians
 float velX, velY;     // Velocity
 
 const float ACCELERATION   = 0.1f;  // How fast the ship accelerates
-const float ROTATION_SPEED = 0.05f;  // Radians/frame rotation
+const float ROTATION_SPEED = 0.1f;  // Radians/frame rotation
 const float FRICTION       = 0.99f; // Slows the ship gradually
