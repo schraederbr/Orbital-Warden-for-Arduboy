@@ -1,7 +1,9 @@
 #include <Arduboy2.h>
 #include <math.h>
+#include "Font3x5.h"
 
 Arduboy2 arduboy;
+Font3x5 font3x5 = Font3x5();
 
 // -----------------------
 // World & Camera Settings
@@ -22,6 +24,8 @@ const int worldCenterY = worldHeight / 2;
 // Camera variables (centered on the ship)
 float cameraX = 0;
 float cameraY = 0;
+const int DEFAULT_LIVES = 3;
+int lives = DEFAULT_LIVES;
 
 // -----------------------
 // Circle / Background

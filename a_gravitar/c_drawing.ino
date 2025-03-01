@@ -88,7 +88,7 @@ void drawStars() {
     }
   }
 }
-void drawPlanet(bool drawDots = false, bool drawLines = true, bool drawTriangles = false, bool drawHorizontalLines = false){
+void drawPlanet(bool drawLines = true, bool drawDots = false, bool drawTriangles = false, bool drawHorizontalLines = false){
   //Draw dots where lines connect
   if(drawDots){
     for (int i = 0; i < circle_num_points; i++) {
@@ -366,12 +366,11 @@ void drawPolygonLines(Point2D* points, int num_points, bool close_shape) {
   }
 }
 
-// Draws the "ship" as a small triangle, given a screen position & angle.
-void drawShip(float screenX, float screenY, float angle) {
+void drawRotatedTriangle(bool drawBottom, float screenX, float screenY, float angle, int x1, int y1, int x2, int y2, int x3, int y3){
   // Triangle points relative to ship center
-  float x1 = 0,   y1 = -4;
-  float x2 = -3,  y2 = 4;
-  float x3 = 3,   y3 = 4;
+  // float x1 = 0,   y1 = -4;
+  // float x2 = -3,  y2 = 4;
+  // float x3 = 3,   y3 = 4;
 
   float cosA = cos(angle);
   float sinA = sin(angle);
@@ -393,6 +392,34 @@ void drawShip(float screenX, float screenY, float angle) {
   int iy3 = (int)(screenY + ry3);
 
   arduboy.drawTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
+}
+
+// Draws the "ship" as a small triangle, given a screen position & angle.
+void drawShip(float screenX, float screenY, float angle) {
+  // Triangle points relative to ship center
+  float x1 = 0,   y1 = -5;
+  float x2 = -5,  y2 = 0;
+  float x3 = 5,   y3 = 0;
+  drawRotatedTriangle(false, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+
+  // Draw the thrust triangle
+  x1 = 0;   y1 = 10;
+  x2 = -3;  y2 = 4;
+  x3 = 3;   y3 = 4;
+  // drawRotatedTriangle(screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+
+  //-3,-2
+  //-5, 0
+  //-1, 0
+
+  // Draw the thrust triangle
+  x1 = -3;   y1 = 2;
+  x2 = -5;  y2 = 0;
+  x3 = -1;   y3 = 0;
+  drawRotatedTriangle(false, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+
+
+
 }
 
 //My coordinates may be off

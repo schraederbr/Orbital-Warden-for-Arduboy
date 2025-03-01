@@ -23,7 +23,7 @@ void setup() {
   generateStars();
   // Start the ship somewhere in the world. For demonstration, let's put it in the middle
   shipX     = worldWidth / 2;   
-  shipY     = worldHeight / 2;  
+  shipY     = 0;  
   shipAngle = 0;
   velX      = 0;
   velY      = 0;
@@ -77,7 +77,7 @@ void updateTurretBullets() {
       float collideRadius = 5.0f;   // tweak as needed
       if (distSq < (collideRadius * collideRadius)) {
         // Hit the player!
-        arduboy.print("Hit!");
+        death();
         // gameOver = true;
         // Deactivate bullet
         turretBullets[i].active = false;
@@ -85,6 +85,41 @@ void updateTurretBullets() {
         // or just let the rest keep updating.
       }
     }
+  }
+}
+
+void death() {
+  // Optionally display a brief game-over message.
+  lives--;
+  if(lives <= 0){
+    lives = DEFAULT_LIVES;
+    arduboy.clear();
+    arduboy.setCursor(10, 30);
+    arduboy.print("Game Over!");
+    arduboy.display();
+    delay(5000); // Pause briefly before restarting
+  }
+
+
+  // Reset ship to starting position in the middle of the world.
+  shipX     = worldWidth / 2;
+  shipY     = 0;
+  shipAngle = 0;
+  velX      = 0;
+  velY      = 0;
+
+  // Reset bullets.
+  for (int i = 0; i < MAX_BULLETS; i++) {
+    bullets[i].active = false;
+  }
+  
+  // Reset turret timers (so they don't all fire immediately)
+  for (int t = 0; t < turretCount; t++) {
+    turrets[t].fireTimer = random(0, TURRET_FIRE_DELAY);
+  }
+
+  for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
+    turretBullets[i].active = false;
   }
 }
 
@@ -116,6 +151,24 @@ void loop() {
     velX += cos(shipAngle - PI / 2) * ACCELERATION;
     velY += sin(shipAngle - PI / 2) * ACCELERATION;
   }
+
+// --- 1.1 Apply Gravity ---
+  // Compute the planet's center in world coordinates.
+  float planetCenterX = worldCenterX + circleCenterX;
+  float planetCenterY = worldCenterY + circleCenterY;
+
+  // Compute vector from ship to planet center.
+  float dx = planetCenterX - shipX;
+  float dy = planetCenterY - shipY;
+  float distance = sqrt(dx * dx + dy * dy);
+  if (distance > 0) {  // Normalize the vector to avoid division by zero.
+    dx /= distance;
+    dy /= distance;
+  }
+  const float GRAVITY_ACCEL = 0.01f;  // Adjust this constant to change gravity strength.
+  velX += dx * GRAVITY_ACCEL;
+  velY += dy * GRAVITY_ACCEL;
+
 
   // Update ship
   shipX += velX;
@@ -180,17 +233,11 @@ void loop() {
 
           // Compare to a threshold radius squared.
           // If your turrets are drawn 4×4, a radius of ~2 might suffice.
-          // For safety, let's use 16 (so radius = 4).
           if (distSq < 22.0f) {
             // Destroy bullet
             bullets[i].active = false;
             turretCount--;
             turrets[t] = turrets[turretCount];
-            // If you ALSO want the turret destroyed, 
-            // add code here like:
-            // turrets[t].active = false; // (You'd need an 'active' flag for turrets too.)
-
-            // Break out of the turret loop
             break;
           }
         }
@@ -206,7 +253,7 @@ void loop() {
   drawTurretBullets();
 
   // Planet circle (optional regen with some other input if you like)
-  drawPlanet(false, true, false, false);
+  drawPlanet(true, false, false, false);
 
   drawAllTurrets();
 
@@ -226,6 +273,11 @@ void loop() {
   float screenShipX = shipX - cameraX;
   float screenShipY = shipY - cameraY;
   drawShip(screenShipX, screenShipY, shipAngle);
-
+  if (pointInPlanet(shipX, shipY)) {
+    arduboy.print("HIT PLANET!");
+    death();
+  }
+  arduboy.print(lives);
+  // font3x5.print(lives);
   arduboy.display();
 }
