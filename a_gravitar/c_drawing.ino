@@ -366,6 +366,7 @@ void drawPolygonLines(Point2D* points, int num_points, bool close_shape) {
   }
 }
 
+//Use drawline instead of drawTriangle so you can skip one of the lines
 void drawRotatedTriangle(bool drawBottom, float screenX, float screenY, float angle, int x1, int y1, int x2, int y2, int x3, int y3){
   // Triangle points relative to ship center
   // float x1 = 0,   y1 = -4;
