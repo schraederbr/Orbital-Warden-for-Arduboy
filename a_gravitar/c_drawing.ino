@@ -367,7 +367,7 @@ void drawPolygonLines(Point2D* points, int num_points, bool close_shape) {
 }
 
 //Use drawline instead of drawTriangle so you can skip one of the lines
-void drawRotatedTriangle(bool drawBottom, float screenX, float screenY, float angle, int x1, int y1, int x2, int y2, int x3, int y3){
+void drawRotatedTriangle(int linesToDraw, float screenX, float screenY, float angle, int x1, int y1, int x2, int y2, int x3, int y3){
   // Triangle points relative to ship center
   // float x1 = 0,   y1 = -4;
   // float x2 = -3,  y2 = 4;
@@ -392,35 +392,64 @@ void drawRotatedTriangle(bool drawBottom, float screenX, float screenY, float an
   int ix3 = (int)(screenX + rx3);
   int iy3 = (int)(screenY + ry3);
 
-  arduboy.drawTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
+  // arduboy.drawTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
+  
+  if (linesToDraw & 0b001) {
+      arduboy.drawLine(ix1, iy1, ix2, iy2, WHITE);
+  }
+  if (linesToDraw & 0b010) {
+      arduboy.drawLine(ix2, iy2, ix3, iy3, WHITE);
+  }
+  if (linesToDraw & 0b100) {
+      arduboy.drawLine(ix3, iy3, ix1, iy1, WHITE);
+  }
+  
+  
+
 }
 
 // Draws the "ship" as a small triangle, given a screen position & angle.
-void drawShip(float screenX, float screenY, float angle) {
-  // Triangle points relative to ship center
+void drawShip(bool simpleStyle, float screenX, float screenY, float angle) {
+// Triangle points relative to ship center
   float x1 = 0,   y1 = -5;
   float x2 = -5,  y2 = 0;
   float x3 = 5,   y3 = 0;
-  drawRotatedTriangle(false, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+  if(simpleStyle){
+    drawRotatedTriangle(0b111, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+  }
+  else{
+    // Triangle points relative to ship center
+    x1 = 0,   y1 = -5;
+    x2 = -5,  y2 = 0;
+    x3 = 5,   y3 = 0;
+    drawRotatedTriangle(0b101, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
 
-  // Draw the thrust triangle
-  x1 = 0;   y1 = 10;
-  x2 = -3;  y2 = 4;
-  x3 = 3;   y3 = 4;
-  // drawRotatedTriangle(screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+    // Draw the left small triangle
+    x1 = -3;   y1 = 3;
+    x2 = -5;  y2 = 1;
+    x3 = 0;   y3 = 0;
+    drawRotatedTriangle(0b101, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
 
-  //-3,-2
-  //-5, 0
-  //-1, 0
-
-  // Draw the thrust triangle
-  x1 = -3;   y1 = 2;
-  x2 = -5;  y2 = 0;
-  x3 = -1;   y3 = 0;
-  drawRotatedTriangle(false, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
-
-
-
+    // Draw the right small triangle
+    x1 = 3;   y1 = 3;
+    x2 = 5;  y2 = 1;
+    x3 = 0;   y3 = 0;
+    drawRotatedTriangle(0b101, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+  }
+  if (arduboy.pressed(A_BUTTON)){
+    // Draw the thrust triangle
+    x1 = -2;   y1 = 3;
+    x2 = 0;  y2 = 7;
+    x3 = 2;   y3 = 3;
+    drawRotatedTriangle(0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+  }
+  if (arduboy.pressed(DOWN_BUTTON)) {
+    //Draw tractor beam
+    x1 = -15;   y1 = 25;
+    x2 = 0;  y2 = 0;
+    x3 = 15;   y3 = 25;
+    drawRotatedTriangle(0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+  }
 }
 
 //My coordinates may be off

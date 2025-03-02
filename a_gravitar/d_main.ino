@@ -5,7 +5,7 @@ void setup() {
   Serial.begin(9600);
   delay(2000);
   arduboy.begin();
-  arduboy.setFrameRate(60);
+  arduboy.setFrameRate(FRAME_RATE);
 
   randomSeed(analogRead(0));
   circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
@@ -147,9 +147,11 @@ void loop() {
   if (arduboy.pressed(RIGHT_BUTTON)) {
     shipAngle += ROTATION_SPEED;
   }
+  //Thrusting
   if (arduboy.pressed(A_BUTTON)) {
     velX += cos(shipAngle - PI / 2) * ACCELERATION;
     velY += sin(shipAngle - PI / 2) * ACCELERATION;
+    currentFuel -= THRUST_FUEL_BURN_RATE / FRAME_RATE;
   }
 
 // --- 1.1 Apply Gravity ---
@@ -272,12 +274,15 @@ void loop() {
   // Draw the ship
   float screenShipX = shipX - cameraX;
   float screenShipY = shipY - cameraY;
-  drawShip(screenShipX, screenShipY, shipAngle);
+  drawShip(false, screenShipX, screenShipY, shipAngle);
   if (pointInPlanet(shipX, shipY)) {
     arduboy.print("HIT PLANET!");
     death();
   }
   arduboy.print(lives);
+  arduboy.setCursorX(64);
+  arduboy.print(currentFuel);
+  arduboy.setCursorX(0);
   // font3x5.print(lives);
   arduboy.display();
 }
