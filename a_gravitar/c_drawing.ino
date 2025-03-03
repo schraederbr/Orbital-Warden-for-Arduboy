@@ -281,7 +281,28 @@ Point2D* randomCircle(int angle_step, float min_distance, float max_distance) {
   return points;
 }
 
+void generateFuelPickups(int numFuelPickups){
+    pickupCount = 0;
+    for (int i = 0; i < numFuelPickups; i++) {
+        int pickupIndex = random(0, circle_num_points);
+        Point2D p1 = circle_points[pickupIndex];
+        Point2D p2 = circle_points[(pickupIndex + 1) % circle_num_points];
 
+        float dx = p2.x - p1.x;
+        float dy = p2.y - p1.y;
+        float edgeAngle = atan2(dy, dx);
+        float pickupAngle = edgeAngle + PI / 2.0;
+
+        Point2D pickupOffset = randomPointOnLine(p1, p2);
+        float worldX = worldCenterX + pickupOffset.x;
+        float worldY = worldCenterY + pickupOffset.y;
+
+        fuelPickups[pickupCount].x = worldX;
+        fuelPickups[pickupCount].y = worldY;
+        fuelPickups[pickupCount].angle = pickupAngle;
+        pickupCount++;
+    }
+}
 
 void generateTurrets(int numTurrets) {
   turretCount = 0;
@@ -311,6 +332,33 @@ void generateTurrets(int numTurrets) {
   for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
     turretBullets[i].active = false;
   }
+}
+
+void drawAllFuelPickups(){
+    for (int i = 0; i < turretCount; i++) {
+        float pivotX = fuelPickups[i].x - cameraX; // pivot = planet perimeter
+        float pivotY = fuelPickups[i].y - cameraY;
+        float angle  = fuelPickups[i].angle + PI/2;       // tangent + π/2 (or however you computed)
+
+        float pickupW = 4.0;  // or whatever size
+        float pickupH = 4.0;  // for example
+
+        // Half-sizes
+        float halfW = pickupW * 0.5;
+        float halfH = pickupH * 0.5;
+
+        // We want the rectangle's bottom edge at the pivot. 
+        // In local coords, that bottom edge = +halfH.
+        // So we shift the center by (0, -halfH) in local space, then rotate it.
+        float offsetX =  (0.0f) * cos(angle) - (-halfH) * sin(angle);
+        float offsetY =  (0.0f) * sin(angle) + (-halfH) * cos(angle);
+
+        float centerX = pivotX + offsetX;
+        float centerY = pivotY + offsetY;
+
+        // Now draw the rectangle with its center at (centerX, centerY) and rotation = angle
+        drawRotatedRect(centerX, centerY, pickupW, pickupH, angle);
+    }
 }
 
 

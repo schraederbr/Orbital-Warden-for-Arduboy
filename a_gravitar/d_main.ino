@@ -19,6 +19,7 @@ void setup() {
   //   Serial.print(circle_points[i].y);
   //   Serial.println(")");
   // }
+  generateFuelPickups(NUM_FUEL_PICKUPS);
   generateTurrets(MAX_TURRETS);
   generateStars();
   // Start the ship somewhere in the world. For demonstration, let's put it in the middle
@@ -133,6 +134,10 @@ void drawTurretBullets() {
       // Or arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
     }
   }
+}
+
+void tractorBeam(){
+    
 }
 
 void loop() {
@@ -258,6 +263,7 @@ void loop() {
   drawPlanet(true, false, false, false);
 
   drawAllTurrets();
+  drawAllFuelPickups();
 
   // Draw Bullets
   for (int i = 0; i < MAX_BULLETS; i++) {

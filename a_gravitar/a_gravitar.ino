@@ -28,6 +28,7 @@ float cameraY = 0;
 const int FRAME_RATE = 60;
 const int DEFAULT_LIVES = 3;
 int lives = DEFAULT_LIVES;
+const int NUM_FUEL_PICKUPS = 3;
 const int DEFAULT_FUEL = 10000;
 const int FUEL_PER_PICKUP = 2500;
 const int THRUST_FUEL_BURN_RATE = 100; //per second when thrusting
@@ -35,6 +36,16 @@ const int TRACTOR_FUEL_BURN_RATE = 200; //fuel burned per second when tractor be
 const int SHIELD_FUEL_BURN_RATE = 500; //fuel burned per second when shield is active
 int currentFuel = DEFAULT_FUEL;
 
+
+struct FuelPickup {
+    float x;
+    float y;
+    float angle;
+    int fuelAmount = FUEL_PER_PICKUP;
+};
+
+FuelPickup fuelPickups[NUM_FUEL_PICKUPS];
+int pickupCount = 0;
 // -----------------------
 // Circle / Background
 // -----------------------
