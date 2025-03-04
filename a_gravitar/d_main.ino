@@ -137,8 +137,54 @@ void drawTurretBullets() {
 }
 
 void tractorBeam(){
-    
+  // Tractor beam triangle in ship-local coordinates
+  float localX1 = -15, localY1 = 25;
+  float localX2 = 0,   localY2 = 0;
+  float localX3 = 15,  localY3 = 25;
+  
+  // Compute rotation factors
+  float cosA = cos(shipAngle);
+  float sinA = sin(shipAngle);
+  
+  // Rotate and translate the points into world coordinates
+  float beamX1 = shipX + (localX1 * cosA - localY1 * sinA);
+  float beamY1 = shipY + (localX1 * sinA + localY1 * cosA);
+  
+  float beamX2 = shipX + (localX2 * cosA - localY2 * sinA);
+  float beamY2 = shipY + (localX2 * sinA + localY2 * cosA);
+  
+  float beamX3 = shipX + (localX3 * cosA - localY3 * sinA);
+  float beamY3 = shipY + (localX3 * sinA + localY3 * cosA);
+  
+  // Check all fuel pickups to see if they lie within the tractor beam triangle
+  for (int i = 0; i < pickupCount; i++) {
+    if (pointInTriangle(fuelPickups[i].x, fuelPickups[i].y, beamX1, beamY1, beamX2, beamY2, beamX3, beamY3)) {
+      // For debugging: print coordinates (you might remove these prints later)
+      font3x5.print(fuelPickups[i].x);
+      font3x5.print(",");
+      font3x5.println(fuelPickups[i].y);
+      font3x5.print(beamX1);
+      font3x5.print(",");
+      font3x5.println(beamY1);
+      font3x5.print(beamX2);
+      font3x5.print(",");
+      font3x5.println(beamY2);
+      font3x5.print(beamX3);
+      font3x5.print(",");
+      font3x5.println(beamY3);
+      font3x5.setCursor(0, 0);
+      arduboy.display();
+      delay(1000);
+
+      // Add fuel to the ship
+      currentFuel += FUEL_PER_PICKUP;
+      // Optionally remove the pickup from the array:
+      // fuelPickups[i] = fuelPickups[pickupCount - 1];
+      // pickupCount--;
+    }
+  }
 }
+
 
 void loop() {
   if (!arduboy.nextFrame()) return;
@@ -250,6 +296,10 @@ void loop() {
         }
       }
     }
+  }
+
+  if (arduboy.pressed(DOWN_BUTTON)){
+    tractorBeam();
   }
   updateTurrets();
   updateTurretBullets();

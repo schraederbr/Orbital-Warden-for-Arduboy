@@ -179,4 +179,27 @@ Point2D randomPointOnLine(const Point2D& p0, const Point2D& p1) {
     return result;
 }
 
+bool pointInTriangle(int px, int py, int x1, int y1, int x2, int y2, int x3, int y3) {
+    // Compute vectors
+    int v0x = x3 - x1, v0y = y3 - y1;
+    int v1x = x2 - x1, v1y = y2 - y1;
+    int v2x = px - x1, v2y = py - y1;
+
+    // Compute dot products
+    int dot00 = v0x * v0x + v0y * v0y;
+    int dot01 = v0x * v1x + v0y * v1y;
+    int dot02 = v0x * v2x + v0y * v2y;
+    int dot11 = v1x * v1x + v1y * v1y;
+    int dot12 = v1x * v2x + v1y * v2y;
+
+    // Compute barycentric coordinates
+    int denom = dot00 * dot11 - dot01 * dot01;
+    if (denom == 0) return false; // Avoid division by zero
+
+    float u = (float)(dot11 * dot02 - dot01 * dot12) / denom;
+    float v = (float)(dot00 * dot12 - dot01 * dot02) / denom;
+
+    // Check if the point is inside the triangle
+    return (u >= 0) && (v >= 0) && (u + v <= 1);
+}
 
