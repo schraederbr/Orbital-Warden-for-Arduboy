@@ -179,27 +179,22 @@ Point2D randomPointOnLine(const Point2D& p0, const Point2D& p1) {
     return result;
 }
 
-bool pointInTriangle(int px, int py, int x1, int y1, int x2, int y2, int x3, int y3) {
-    // Compute vectors
-    int v0x = x3 - x1, v0y = y3 - y1;
-    int v1x = x2 - x1, v1y = y2 - y1;
-    int v2x = px - x1, v2y = py - y1;
+bool pointInTriangle(float px, float py, float x1, float y1, float x2, float y2, float x3, float y3) {
+    // Compute the area of the triangle using the determinant formula
+    float denominator = ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
 
-    // Compute dot products
-    int dot00 = v0x * v0x + v0y * v0y;
-    int dot01 = v0x * v1x + v0y * v1y;
-    int dot02 = v0x * v2x + v0y * v2y;
-    int dot11 = v1x * v1x + v1y * v1y;
-    int dot12 = v1x * v2x + v1y * v2y;
+    // Avoid division by zero (if the triangle is degenerate)
+    if (denominator == 0.0) return false;
 
     // Compute barycentric coordinates
-    int denom = dot00 * dot11 - dot01 * dot01;
-    if (denom == 0) return false; // Avoid division by zero
+    float alpha = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3)) / denominator;
+    float beta  = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3)) / denominator;
+    float gamma = 1.0 - alpha - beta;
 
-    float u = (float)(dot11 * dot02 - dot01 * dot12) / denom;
-    float v = (float)(dot00 * dot12 - dot01 * dot02) / denom;
-
-    // Check if the point is inside the triangle
-    return (u >= 0) && (v >= 0) && (u + v <= 1);
+    // Check if the point is inside the triangle (all barycentric coordinates between 0 and 1)
+    return (alpha >= 0.0 && alpha <= 1.0) && 
+           (beta  >= 0.0 && beta  <= 1.0) && 
+           (gamma >= 0.0 && gamma <= 1.0);
 }
+
 

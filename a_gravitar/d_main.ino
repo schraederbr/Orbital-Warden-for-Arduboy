@@ -6,8 +6,10 @@ void setup() {
   delay(2000);
   arduboy.begin();
   arduboy.setFrameRate(FRAME_RATE);
-
-  randomSeed(analogRead(0));
+  //Add a start screen instead of this delay so I can use a button presss randomness to seed random.
+  //This allows for random in both simular and hardware
+  delay(1);  
+  randomSeed(micros()); 
   circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
   
   // for (int i = 0; i < circle_num_points; i++) {
@@ -159,28 +161,11 @@ void tractorBeam(){
   // Check all fuel pickups to see if they lie within the tractor beam triangle
   for (int i = 0; i < pickupCount; i++) {
     if (pointInTriangle(fuelPickups[i].x, fuelPickups[i].y, beamX1, beamY1, beamX2, beamY2, beamX3, beamY3)) {
-      // For debugging: print coordinates (you might remove these prints later)
-      font3x5.print(fuelPickups[i].x);
-      font3x5.print(",");
-      font3x5.println(fuelPickups[i].y);
-      font3x5.print(beamX1);
-      font3x5.print(",");
-      font3x5.println(beamY1);
-      font3x5.print(beamX2);
-      font3x5.print(",");
-      font3x5.println(beamY2);
-      font3x5.print(beamX3);
-      font3x5.print(",");
-      font3x5.println(beamY3);
-      font3x5.setCursor(0, 0);
-      arduboy.display();
-      delay(1000);
 
       // Add fuel to the ship
       currentFuel += FUEL_PER_PICKUP;
-      // Optionally remove the pickup from the array:
-      // fuelPickups[i] = fuelPickups[pickupCount - 1];
-      // pickupCount--;
+      fuelPickups[i] = fuelPickups[pickupCount - 1];
+      pickupCount--;
     }
   }
 }
