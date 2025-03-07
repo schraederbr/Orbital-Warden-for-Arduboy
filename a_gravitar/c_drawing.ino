@@ -335,7 +335,7 @@ void generateTurrets(int numTurrets) {
 }
 
 void drawAllFuelPickups(){
-    for (int i = 0; i < turretCount; i++) {
+    for (int i = 0; i < pickupCount; i++) {
         float pivotX = fuelPickups[i].x - cameraX; // pivot = planet perimeter
         float pivotY = fuelPickups[i].y - cameraY;
         float angle  = fuelPickups[i].angle + PI/2;       // tangent + π/2 (or however you computed)

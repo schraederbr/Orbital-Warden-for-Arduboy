@@ -92,15 +92,22 @@ void updateTurretBullets() {
 }
 
 void death() {
-  // Optionally display a brief game-over message.
   lives--;
   if(lives <= 0){
     lives = DEFAULT_LIVES;
+    currentFuel = DEFAULT_FUEL;
     arduboy.clear();
     arduboy.setCursor(10, 30);
-    arduboy.print("Game Over!");
+    arduboy.println("Game Over!");
+    arduboy.print("Press any button to restart");
     arduboy.display();
-    delay(5000); // Pause briefly before restarting
+    while(true){
+      arduboy.pollButtons();
+      if(arduboy.buttonsState()){
+        break;
+      }
+    }
+    
   }
 
 
@@ -110,6 +117,13 @@ void death() {
   shipAngle = 0;
   velX      = 0;
   velY      = 0;
+
+  randomSeed(micros()); 
+  circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
+
+  generateFuelPickups(NUM_FUEL_PICKUPS);
+  generateTurrets(MAX_TURRETS);
+  generateStars();
 
   // Reset bullets.
   for (int i = 0; i < MAX_BULLETS; i++) {
@@ -159,13 +173,18 @@ void tractorBeam(){
   float beamY3 = shipY + (localX3 * sinA + localY3 * cosA);
   
   // Check all fuel pickups to see if they lie within the tractor beam triangle
-  for (int i = 0; i < pickupCount; i++) {
+  for (int i = 0; i < pickupCount; ) { 
     if (pointInTriangle(fuelPickups[i].x, fuelPickups[i].y, beamX1, beamY1, beamX2, beamY2, beamX3, beamY3)) {
-
       // Add fuel to the ship
       currentFuel += FUEL_PER_PICKUP;
+      
+      // Replace the removed pickup with the last one in the array
       fuelPickups[i] = fuelPickups[pickupCount - 1];
       pickupCount--;
+
+      // Do NOT increment i here to recheck the swapped pickup
+    } else {
+      i++; // Only increment if no deletion occurred
     }
   }
 }

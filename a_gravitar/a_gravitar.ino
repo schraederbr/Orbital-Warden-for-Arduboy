@@ -10,8 +10,8 @@ Font3x5 font3x5 = Font3x5();
 // -----------------------
 const int screenWidth  = 128;
 const int screenHeight = 64;
-const int planetMinRadius = 90;
-const int planetMaxRadius = 180;
+const int planetMinRadius = 40;
+const int planetMaxRadius = 90;
 const int planetStepAngle = 25;
 
 const int worldWidth  = 512;
