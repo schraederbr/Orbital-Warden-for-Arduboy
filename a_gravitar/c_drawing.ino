@@ -441,16 +441,21 @@ void drawRotatedTriangle(int linesToDraw, float screenX, float screenY, float an
   int iy3 = (int)(screenY + ry3);
 
   // arduboy.drawTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
-  
-  if (linesToDraw & 0b001) {
+  if(linesToDraw == 0b111){
+    arduboy.drawTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
+  }
+  else{
+    if (linesToDraw & 0b001) {
       arduboy.drawLine(ix1, iy1, ix2, iy2, WHITE);
-  }
-  if (linesToDraw & 0b010) {
+    }
+    if (linesToDraw & 0b010) {
       arduboy.drawLine(ix2, iy2, ix3, iy3, WHITE);
-  }
-  if (linesToDraw & 0b100) {
+    }
+    if (linesToDraw & 0b100) {
       arduboy.drawLine(ix3, iy3, ix1, iy1, WHITE);
+    }
   }
+
   
   
 

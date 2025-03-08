@@ -99,7 +99,8 @@ void death() {
     arduboy.clear();
     arduboy.setCursor(10, 30);
     arduboy.println("Game Over!");
-    arduboy.print("Press any button to restart");
+    arduboy.println("Press any button");
+    arduboy.println("to restart");
     arduboy.display();
     while(true){
       arduboy.pollButtons();
@@ -283,6 +284,22 @@ void loop() {
       else {
         // 3. Check collision with each turret
         for (int t = 0; t < MAX_TURRETS; t++) {
+          //These corners aren't right,  they aren't rotated with the turret
+          // if(pointInRectangle(
+          //   bullets[i].x, bullets[i].y,
+          //   turrets[t].x - 2, turrets[t].y - 4,  // Corner 1
+          //   turrets[t].x + 2, turrets[t].y - 4,  // Corner 2
+          //   turrets[t].x + 2, turrets[t].y + 4,  // Corner 3
+          //   turrets[t].x - 2, turrets[t].y + 4   // Corner 4
+          // )
+          // ){
+          //   // Deactivate bullet
+          //   bullets[i].active = false;
+          //   // Destroy turret
+          //   turretCount--;
+          //   turrets[t] = turrets[turretCount];
+          //   break;
+          // }
           float dx = bullets[i].x - turrets[t].x;
           float dy = bullets[i].y - turrets[t].y;
           // Distance squared
