@@ -47,10 +47,12 @@ void updateTurrets() {
       // reset timer
       turrets[t].fireTimer = TURRET_FIRE_DELAY;
       // aim at player
-      spawnTurretBullet(turrets[t].x, 
-                        turrets[t].y, 
-                        shipX,    // player's position
-                        shipY);
+      if(isWithinDistance(shipX, shipY, turrets[t].x, turrets[t].y, TURRET_ACTIVE_DISTANCE)){
+        spawnTurretBullet(turrets[t].x, 
+                          turrets[t].y, 
+                          shipX,    // player's position
+                          shipY);
+      }
     }
   }
 }
@@ -96,6 +98,7 @@ void death() {
   if(lives <= 0){
     lives = DEFAULT_LIVES;
     currentFuel = DEFAULT_FUEL;
+    score = 0;
     arduboy.clear();
     arduboy.setCursor(10, 30);
     arduboy.println("Game Over!");
@@ -154,6 +157,8 @@ void drawTurretBullets() {
 }
 
 void tractorBeam(){
+  currentFuel -= TRACTOR_FUEL_BURN_RATE / FRAME_RATE;
+
   // Tractor beam triangle in ship-local coordinates
   float localX1 = -15, localY1 = 25;
   float localX2 = 0,   localY2 = 0;
@@ -300,15 +305,9 @@ void loop() {
           //   turrets[t] = turrets[turretCount];
           //   break;
           // }
-          float dx = bullets[i].x - turrets[t].x;
-          float dy = bullets[i].y - turrets[t].y;
-          // Distance squared
-          float distSq = dx * dx + dy * dy;
-
-          // Compare to a threshold radius squared.
-          // If your turrets are drawn 4×4, a radius of ~2 might suffice.
-          if (distSq < 22.0f) {
+          if(isWithinDistance(bullets[i].x, bullets[i].y, turrets[t].x, turrets[t].y, 4)){
             // Destroy bullet
+            score += TURRET_SCORE;
             bullets[i].active = false;
             turretCount--;
             turrets[t] = turrets[turretCount];
@@ -357,8 +356,10 @@ void loop() {
     death();
   }
   arduboy.print(lives);
-  arduboy.setCursorX(64);
+  arduboy.setCursorX(24);
   arduboy.print(currentFuel);
+  arduboy.setCursorX(88);
+  arduboy.print(score);
   arduboy.setCursorX(0);
   // font3x5.print(lives);
   arduboy.display();
