@@ -25,12 +25,7 @@ void setup() {
   generateTurrets(MAX_TURRETS);
   generateStars();
   // Start the ship somewhere in the world. For demonstration, let's put it in the middle
-  shipX     = worldWidth / 2;   
-  shipY     = 0;  
-  shipAngle = 0;
-  velX      = 0;
-  velY      = 0;
-
+  resetShip();
   // Initialize bullets array
   for (int i = 0; i < MAX_BULLETS; i++) {
     bullets[i].active = false;
@@ -93,6 +88,15 @@ void updateTurretBullets() {
   }
 }
 
+void resetShip(){
+  // Reset ship to starting position in the middle of the world.
+  shipX     = worldWidth / 2;
+  shipY     = planetMaxRadius + 10;  
+  shipAngle = 0;
+  velX      = 0;
+  velY      = 0;
+}
+
 void death() {
   lives--;
   if(lives <= 0){
@@ -114,13 +118,8 @@ void death() {
     
   }
 
+  resetShip();
 
-  // Reset ship to starting position in the middle of the world.
-  shipX     = worldWidth / 2;
-  shipY     = 0;
-  shipAngle = 0;
-  velX      = 0;
-  velY      = 0;
 
   randomSeed(micros()); 
   circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
@@ -228,9 +227,22 @@ void loop() {
     dx /= distance;
     dy /= distance;
   }
-  const float GRAVITY_ACCEL = 0.01f;  // Adjust this constant to change gravity strength.
+
+  //Making gravity acceleration constant
+  // if(dx > 0)
+  //   dx = 1;
+  // else
+  //   dx = -1;
+  // if(dy > 0)
+  //   dy = 1;
+  // else
+  //   dy = -1;
+
+
   velX += dx * GRAVITY_ACCEL;
   velY += dy * GRAVITY_ACCEL;
+  // velX += GRAVITY_ACCEL;
+  // velY += GRAVITY_ACCEL;
 
 
   // Update ship
@@ -350,7 +362,7 @@ void loop() {
   // Draw the ship
   float screenShipX = shipX - cameraX;
   float screenShipY = shipY - cameraY;
-  drawShip(false, screenShipX, screenShipY, shipAngle);
+  drawShip(true, true, screenShipX, screenShipY, shipAngle);
   if (pointInPlanet(shipX, shipY)) {
     arduboy.print("HIT PLANET!");
     death();
@@ -359,8 +371,11 @@ void loop() {
   arduboy.setCursorX(24);
   arduboy.print(currentFuel);
   arduboy.setCursorX(88);
-  arduboy.print(score);
+  arduboy.println(score);
   arduboy.setCursorX(0);
+  // arduboy.print(shipX);
+  // arduboy.print(" , ");
+  // arduboy.print(shipY);
   // font3x5.print(lives);
   arduboy.display();
 }

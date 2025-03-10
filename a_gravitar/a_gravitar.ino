@@ -38,6 +38,8 @@ const int TRACTOR_FUEL_BURN_RATE = 400; //fuel burned per second when tractor be
 const int SHIELD_FUEL_BURN_RATE = 500; //fuel burned per second when shield is active
 int currentFuel = DEFAULT_FUEL;
 int score = 0;
+float startX;
+float startY;
 
 struct FuelPickup {
     float x;
