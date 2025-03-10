@@ -8,10 +8,10 @@ float shipX, shipY;  // Position of the ship in "world" coordinates
 float shipAngle;      // Ship’s facing angle in radians
 float velX, velY;     // Velocity
 
-const float ACCELERATION   = 0.06f;  // How fast the ship accelerates
+const float ACCELERATION   = 0.04f;  // How fast the ship accelerates
 const float ROTATION_SPEED = 0.1f;  // Radians/frame rotation
 const float FRICTION       = 0.99f; // Slows the ship gradually
-const float GRAVITY_ACCEL = 0.01f;  // Adjust this constant to change gravity strength.
+const float GRAVITY_ACCEL = 0.015f;  // Adjust this constant to change gravity strength.
 
 // Returns true if the point (px,py) is inside the planet polygon.
 bool pointInPlanet(float px, float py) {

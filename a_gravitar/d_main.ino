@@ -67,23 +67,26 @@ void updateTurretBullets() {
         turretBullets[i].active = false;
         continue;
       }
-
-      // Check collision with player
-      // Suppose the player's radius is ~3 or 4, or just do a point collision 
-      // if your ship is small. We'll do a small threshold:
-      float dx = turretBullets[i].x - shipX;
-      float dy = turretBullets[i].y - shipY;
-      float distSq = dx*dx + dy*dy;
-      float collideRadius = 5.0f;   // tweak as needed
-      if (distSq < (collideRadius * collideRadius)) {
-        // Hit the player!
-        death();
-        // gameOver = true;
-        // Deactivate bullet
-        turretBullets[i].active = false;
-        // Optionally break out altogether,
-        // or just let the rest keep updating.
+      //Down button means the shield is active
+      if(!arduboy.pressed(DOWN_BUTTON)){
+        // Check collision with player
+        // Suppose the player's radius is ~3 or 4, or just do a point collision 
+        // if your ship is small. We'll do a small threshold:
+        float dx = turretBullets[i].x - shipX;
+        float dy = turretBullets[i].y - shipY;
+        float distSq = dx*dx + dy*dy;
+        float collideRadius = 5.0f;   // tweak as needed
+        if (distSq < (collideRadius * collideRadius)) {
+          // Hit the player!
+          death();
+          // gameOver = true;
+          // Deactivate bullet
+          turretBullets[i].active = false;
+          // Optionally break out altogether,
+          // or just let the rest keep updating.
+        }
       }
+      
     }
   }
 }
@@ -143,17 +146,6 @@ void death() {
   }
 }
 
-void drawTurretBullets() {
-  for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
-    if (turretBullets[i].active) {
-      float bx = turretBullets[i].x - cameraX;
-      float by = turretBullets[i].y - cameraY;
-      // Draw as a small dot
-      arduboy.drawPixel((int)bx, (int)by, WHITE);
-      // Or arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
-    }
-  }
-}
 
 void tractorBeam(){
   currentFuel -= TRACTOR_FUEL_BURN_RATE / FRAME_RATE;
@@ -195,6 +187,8 @@ void tractorBeam(){
 }
 
 
+
+
 void loop() {
   if (!arduboy.nextFrame()) return;
   arduboy.pollButtons();
@@ -209,9 +203,12 @@ void loop() {
   }
   //Thrusting
   if (arduboy.pressed(A_BUTTON)) {
-    velX += cos(shipAngle - PI / 2) * ACCELERATION;
-    velY += sin(shipAngle - PI / 2) * ACCELERATION;
-    currentFuel -= THRUST_FUEL_BURN_RATE / FRAME_RATE;
+    if(currentFuel > 0){
+      velX += cos(shipAngle - PI / 2) * ACCELERATION;
+      velY += sin(shipAngle - PI / 2) * ACCELERATION;
+      currentFuel -= THRUST_FUEL_BURN_RATE / FRAME_RATE;
+    }
+
   }
 
 // --- 1.1 Apply Gravity ---
@@ -267,7 +264,6 @@ void loop() {
 
   // --- 3. Shooting Bullets on B Press ---
   if (arduboy.justPressed(B_BUTTON)) {
-    // Instead of re-generating planet, spawn a bullet
     spawnBullet(shipX, shipY, shipAngle);
   }
 
@@ -347,18 +343,8 @@ void loop() {
   drawAllTurrets();
   drawAllFuelPickups();
 
-  // Draw Bullets
-  for (int i = 0; i < MAX_BULLETS; i++) {
-    if (bullets[i].active) {
-      // Convert bullet position from world coords to screen coords
-      float bx = bullets[i].x - cameraX;
-      float by = bullets[i].y - cameraY;
-      // Draw a pixel or small circle for the bullet
-      arduboy.drawPixel((int)bx, (int)by, WHITE);
-      // Or arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
-    }
-  }
 
+  drawPlayerBullets();
   // Draw the ship
   float screenShipX = shipX - cameraX;
   float screenShipY = shipY - cameraY;
@@ -369,7 +355,12 @@ void loop() {
   }
   arduboy.print(lives);
   arduboy.setCursorX(24);
-  arduboy.print(currentFuel);
+  if(currentFuel > 0){
+    arduboy.print(currentFuel);
+  }
+  else{
+    arduboy.print("EMPTY");
+  }
   arduboy.setCursorX(88);
   arduboy.println(score);
   arduboy.setCursorX(0);

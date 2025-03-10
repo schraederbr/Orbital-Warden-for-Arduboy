@@ -144,6 +144,34 @@ void drawPlanet(bool drawLines = true, bool drawDots = false, bool drawTriangles
 
 }
 
+void drawPlayerBullets(){
+  for (int i = 0; i < MAX_BULLETS; i++) {
+    if (bullets[i].active) {
+      // Convert bullet position from world coords to screen coords
+      float bx = bullets[i].x - cameraX;
+      float by = bullets[i].y - cameraY;
+      // Draw a pixel or small circle for the bullet
+      // arduboy.drawPixel((int)bx, (int)by, WHITE);
+      arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
+      // Or arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
+    }
+  }
+}
+
+void drawTurretBullets() {
+  for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
+    if (turretBullets[i].active) {
+      float bx = turretBullets[i].x - cameraX;
+      float by = turretBullets[i].y - cameraY;
+      // Draw as a small dot
+      // arduboy.drawPixel((int)bx, (int)by, WHITE);
+      arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
+      // Or arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
+    }
+  }
+}
+
+
 void fillPolygonHorizontal(const int *px, const int *py, int n) {
   if (n < 3) return;
 
@@ -513,15 +541,20 @@ void drawShip(bool smallShip, bool simpleStyle, float screenX, float screenY, fl
     x1 = -2;   y1 = 3;
     x2 = 0;  y2 = 7;
     x3 = 2;   y3 = 3;
-    drawRotatedTriangle(false, 0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+    if(currentFuel > 0){
+      drawRotatedTriangle(false, 0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+    }
   }
-  if (arduboy.pressed(DOWN_BUTTON)) {
+  if(arduboy.pressed(DOWN_BUTTON)){
     //Draw tractor beam
     x1 = -15;   y1 = 25;
     x2 = 0;  y2 = 0;
     x3 = 15;   y3 = 25;
     drawRotatedTriangle(false, 0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+    //Draw shield
+    drawRotatedRect(screenX, screenY, 12, 12, angle);
   }
+
 }
 
 //My coordinates may be off
