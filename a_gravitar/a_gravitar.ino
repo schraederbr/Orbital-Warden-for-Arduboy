@@ -10,8 +10,8 @@ Font3x5 font3x5 = Font3x5();
 // -----------------------
 const int screenWidth  = 128;
 const int screenHeight = 64;
-const int planetMinRadius = 80;
-const int planetMaxRadius = 120;
+const int planetMinRadius = 40;
+const int planetMaxRadius = 150;
 const int planetStepAngle = 25;
 
 const int worldWidth  = 512;
@@ -39,7 +39,8 @@ int currentFuel = DEFAULT_FUEL;
 int score = 0;
 float startX = worldWidth / 2;
 float startY = 256 - (planetMaxRadius + 25);  
-
+const float turretWidth = 3.0;
+const float turretHeight = 6.0;
 struct FuelPickup {
     float x;
     float y;
@@ -60,8 +61,6 @@ struct Point2D {
 struct Turret {
   float x;
   float y;
-  float w = 4.0;
-  float h = 8.0;
   float angle;
   int   fireTimer;  // counts down; when <= 0, shoot
   //Points for each corner

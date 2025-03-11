@@ -494,7 +494,7 @@ void generateTurrets(int numTurrets) {
     float pivotY = turrets[i].y - cameraY;
     float angle  = turrets[i].angle;       // tangent + π/2 (or however you computed)
 
-    setTurretCorners(&turrets[i], pivotX, pivotY, turrets[i].w, turrets[i].h);
+    setTurretCorners(&turrets[i], pivotX, pivotY, turretWidth, turretHeight);
   }
 
   // Also init all turret bullets as inactive
@@ -620,9 +620,9 @@ void drawShip(bool smallShip, bool simpleStyle, float screenX, float screenY, fl
   float x3 = 5,   y3 = 0;
   // Triangle points relative to ship center
   if(smallShip){
-    x1 = 0,   y1 = -5;
-    x2 = -3,  y2 = 2;
-    x3 = 3,   y3 = 2;
+    x1 = 0,   y1 = -4;
+    x2 = -2,  y2 = 2;
+    x3 = 2,   y3 = 2;
   }
 
 

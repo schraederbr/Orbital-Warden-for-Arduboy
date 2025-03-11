@@ -323,7 +323,7 @@ void loop() {
   // Draw the ship
   float screenShipX = shipX - cameraX;
   float screenShipY = shipY - cameraY;
-  drawShip(false, false, screenShipX, screenShipY, shipAngle);
+  drawShip(true, true, screenShipX, screenShipY, shipAngle);
   if (pointInPolygon(circle_num_points, circle_points, shipX, shipY)) {
     arduboy.print("HIT PLANET!");
     death();
