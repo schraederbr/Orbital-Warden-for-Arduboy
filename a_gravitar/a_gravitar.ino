@@ -31,7 +31,7 @@ const int FRAME_RATE = 60;
 const int DEFAULT_LIVES = 3;
 int lives = DEFAULT_LIVES;
 const int NUM_FUEL_PICKUPS = 3;
-const int DEFAULT_FUEL = 5000;
+const int DEFAULT_FUEL = 20000;
 const int FUEL_PER_PICKUP = 2500;
 const int THRUST_FUEL_BURN_RATE = 1000; //per second when thrusting
 const int TRACTOR_FUEL_BURN_RATE = 2000; //extra fuel burned per second when tractor beam is active
@@ -60,8 +60,15 @@ struct Point2D {
 struct Turret {
   float x;
   float y;
+  float w = 4.0;
+  float h = 8.0;
   float angle;
   int   fireTimer;  // counts down; when <= 0, shoot
+  //Points for each corner
+  Point2D p1;
+  Point2D p2;
+  Point2D p3;
+  Point2D p4;
 };
 Point2D* circle_points = nullptr;
 const int circle_num_points  = (int)(360 / planetStepAngle);
@@ -200,7 +207,13 @@ bool pointInTriangle(float px, float py, float x1, float y1, float x2, float y2,
            (gamma >= 0.0 && gamma <= 1.0);
 }
 
-
+bool pointInRectangle(float px, float py, Turret* turret){
+  return pointInRectangle(px, py, 
+                          turret->p1.x, turret->p1.y, 
+                          turret->p2.x, turret->p2.y, 
+                          turret->p3.x, turret->p3.y, 
+                          turret->p4.x, turret->p4.y);
+}
 bool pointInRectangle(
     float px, float py,
     float x1, float y1,
@@ -225,4 +238,25 @@ float getDistanceSquared(float x1, float y1, float x2, float y2) {
 
 bool isWithinDistance(float x1, float y1, float x2, float y2, float distance) {
     return getDistanceSquared(x1, y1, x2, y2) <= distance * distance;
+}
+
+// Returns true if the point (px,py) is inside the polygon
+bool pointInPolygon(int numPoints, const Point2D points[], float px, float py) {
+  bool inside = false;
+  // The planet is defined by circle_points.
+  // Each point in circle_points is relative to (0,0); the actual world position is offset by worldCenterX/Y.
+  int j = numPoints - 1;
+  for (int i = 0; i < numPoints; i++) {
+    float xi = points[i].x + worldCenterX;
+    float yi = points[i].y + worldCenterY;
+    float xj = points[j].x + worldCenterX;
+    float yj = points[j].y + worldCenterY;
+    // Check if the ray crosses the edge
+    if (((yi > py) != (yj > py)) &&
+         (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+    j = i;
+  }
+  return inside;
 }

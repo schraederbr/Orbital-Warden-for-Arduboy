@@ -257,6 +257,130 @@ void fillPolygonHorizontal(const int *px, const int *py, int n) {
   }
 }
 
+void drawTurret(Turret* turret, float screenX, float screenY){
+
+  int ix1 = (int)(screenX + turret->p1.x - turret->x);
+  int iy1 = (int)(screenY + turret->p1.y - turret->y);
+  int ix2 = (int)(screenX + turret->p2.x - turret->x);
+  int iy2 = (int)(screenY + turret->p2.y - turret->y);
+  int ix3 = (int)(screenX + turret->p3.x - turret->x);
+  int iy3 = (int)(screenY + turret->p3.y - turret->y);
+  int ix4 = (int)(screenX + turret->p4.x - turret->x);
+  int iy4 = (int)(screenY + turret->p4.y - turret->y);
+
+  // Draw the edges of the rectangle (4 lines)
+  arduboy.drawLine(ix1, iy1, ix2, iy2, WHITE);
+  arduboy.drawLine(ix2, iy2, ix3, iy3, WHITE);
+  arduboy.drawLine(ix3, iy3, ix4, iy4, WHITE);
+  arduboy.drawLine(ix4, iy4, ix1, iy1, WHITE);
+}
+
+void setTurretCorners(Turret* turret, float screenX, float screenY, float width, float height){
+  // Half dimensions so the rectangle is centered at (0, 0) before translation
+  float halfW = width * 0.5;
+  float halfH = height * 0.5;
+
+  // Rectangle corners relative to center
+  // We'll define them in a clockwise (or counter-clockwise) order
+  float x1 = -halfW;  float y1 = -halfH;  // top-left
+  float x2 =  halfW;  float y2 = -halfH;  // top-right
+  float x3 =  halfW;  float y3 =  halfH;  // bottom-right
+  float x4 = -halfW;  float y4 =  halfH;  // bottom-left
+  
+  // Precompute sine and cosine of the angle
+  float cosA = cos(turret->angle);
+  float sinA = sin(turret->angle);
+
+  // Rotate each corner
+  float rx1 = x1 * cosA - y1 * sinA;
+  float ry1 = x1 * sinA + y1 * cosA;
+
+  float rx2 = x2 * cosA - y2 * sinA;
+  float ry2 = x2 * sinA + y2 * cosA;
+
+  float rx3 = x3 * cosA - y3 * sinA;
+  float ry3 = x3 * sinA + y3 * cosA;
+
+  float rx4 = x4 * cosA - y4 * sinA;
+  float ry4 = x4 * sinA + y4 * cosA;
+
+  float offsetX =  (0.0f) * cos(turret->angle) - (-halfH) * sin(turret->angle);
+  float offsetY =  (0.0f) * sin(turret->angle) + (-halfH) * cos(turret->angle);
+
+  turret->x = turret->x + offsetX;
+  turret->y = turret->y + offsetY;
+
+  // Translate to the world position
+  turret->p1.x = turret->x + rx1;
+  turret->p1.y = turret->y + ry1;
+  turret->p2.x = turret->x + rx2;
+  turret->p2.y = turret->y + ry2;
+  turret->p3.x = turret->x + rx3;
+  turret->p3.y = turret->y + ry3;
+  turret->p4.x = turret->x + rx4;
+  turret->p4.y = turret->y + ry4;
+  Serial.println("Turret:");
+  Serial.println("Pos:");
+  Serial.print(turret->x);
+  Serial.print(" , ");
+  Serial.println(turret->y);
+  Serial.println("Corners:");
+  Serial.print(turret->p1.x); Serial.print(" , "); Serial.println(turret->p1.y);
+  Serial.print(turret->p2.x); Serial.print(" , "); Serial.println(turret->p2.y);
+  Serial.print(turret->p3.x); Serial.print(" , "); Serial.println(turret->p3.y);
+  Serial.print(turret->p4.x); Serial.print(" , "); Serial.println(turret->p4.y);
+
+
+}
+//My coordinates may be off
+// I should try drawing an unrotated square first
+// Draws a rotated rectangle of given width & height, centered at (screenX, screenY), at the specified angle.
+void drawRotatedRect(float screenX, float screenY, float width, float height, float angle)
+{
+  // Half dimensions so the rectangle is centered at (0, 0) before translation
+  float halfW = width * 0.5;
+  float halfH = height * 0.5;
+
+  // Rectangle corners relative to center
+  // We'll define them in a clockwise (or counter-clockwise) order
+  float x1 = -halfW;  float y1 = -halfH;  // top-left
+  float x2 =  halfW;  float y2 = -halfH;  // top-right
+  float x3 =  halfW;  float y3 =  halfH;  // bottom-right
+  float x4 = -halfW;  float y4 =  halfH;  // bottom-left
+
+  // Precompute sine and cosine of the angle
+  float cosA = cos(angle);
+  float sinA = sin(angle);
+
+  // Rotate each corner
+  float rx1 = x1 * cosA - y1 * sinA;
+  float ry1 = x1 * sinA + y1 * cosA;
+
+  float rx2 = x2 * cosA - y2 * sinA;
+  float ry2 = x2 * sinA + y2 * cosA;
+
+  float rx3 = x3 * cosA - y3 * sinA;
+  float ry3 = x3 * sinA + y3 * cosA;
+
+  float rx4 = x4 * cosA - y4 * sinA;
+  float ry4 = x4 * sinA + y4 * cosA;
+
+  // Translate to the screen position
+  int ix1 = (int)(screenX + rx1);
+  int iy1 = (int)(screenY + ry1);
+  int ix2 = (int)(screenX + rx2);
+  int iy2 = (int)(screenY + ry2);
+  int ix3 = (int)(screenX + rx3);
+  int iy3 = (int)(screenY + ry3);
+  int ix4 = (int)(screenX + rx4);
+  int iy4 = (int)(screenY + ry4);
+
+  // Draw the edges of the rectangle (4 lines)
+  arduboy.drawLine(ix1, iy1, ix2, iy2, WHITE);
+  arduboy.drawLine(ix2, iy2, ix3, iy3, WHITE);
+  arduboy.drawLine(ix3, iy3, ix4, iy4, WHITE);
+  arduboy.drawLine(ix4, iy4, ix1, iy1, WHITE);
+}
 
 // Creates a random point at a given angle and distance from the center.
 Point2D randomPointAtAngle(float angle_deg, float min_distance, float max_distance) {
@@ -349,7 +473,7 @@ void generateTurrets(int numTurrets) {
     float dx = p2.x - p1.x;
     float dy = p2.y - p1.y;
     float edgeAngle = atan2(dy, dx);
-    float turretAngle = edgeAngle + PI / 2.0;
+    float turretAngle = edgeAngle;
 
     Point2D turretOffset = randomPointOnLine(p1, p2);
     float worldX = worldCenterX + turretOffset.x;
@@ -362,11 +486,35 @@ void generateTurrets(int numTurrets) {
     turrets[turretCount].fireTimer = random(0, TURRET_FIRE_DELAY);
     turretCount++;
   }
+  for (int i = 0; i < turretCount; i++) {
+    float pivotX = turrets[i].x - cameraX; // pivot = planet perimeter
+    float pivotY = turrets[i].y - cameraY;
+    float angle  = turrets[i].angle;       // tangent + π/2 (or however you computed)
+
+    // // Half-sizes
+    // float halfW = turrets[i].w * 0.5;
+    // float halfH = turrets[i].h * 0.5;
+
+    // // We want the rectangle's bottom edge at the pivot. 
+    // // In local coords, that bottom edge = +halfH.
+    // // So we shift the center by (0, -halfH) in local space, then rotate it.
+    // float offsetX =  (0.0f) * cos(angle) - (-halfH) * sin(angle);
+    // float offsetY =  (0.0f) * sin(angle) + (-halfH) * cos(angle);
+
+    // float centerX = pivotX + offsetX;
+    // float centerY = pivotY + offsetY;
+
+    setTurretCorners(&turrets[i], pivotX, pivotY, turrets[i].w, turrets[i].h);
+    // drawTurret(&turrets[i], centerX, centerY);
+    // drawRotatedRect(centerX, centerY, turretW, turretH, angle);
+    
+  }
 
   // Also init all turret bullets as inactive
   for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
     turretBullets[i].active = false;
   }
+
 }
 
 void drawAllFuelPickups(){
@@ -402,26 +550,7 @@ void drawAllTurrets() {
   for (int i = 0; i < turretCount; i++) {
     float pivotX = turrets[i].x - cameraX; // pivot = planet perimeter
     float pivotY = turrets[i].y - cameraY;
-    float angle  = turrets[i].angle - PI/2;       // tangent + π/2 (or however you computed)
-
-    float turretW = 4.0;  // or whatever size
-    float turretH = 8.0;  // for example
-
-    // Half-sizes
-    float halfW = turretW * 0.5;
-    float halfH = turretH * 0.5;
-
-    // We want the rectangle's bottom edge at the pivot. 
-    // In local coords, that bottom edge = +halfH.
-    // So we shift the center by (0, -halfH) in local space, then rotate it.
-    float offsetX =  (0.0f) * cos(angle) - (-halfH) * sin(angle);
-    float offsetY =  (0.0f) * sin(angle) + (-halfH) * cos(angle);
-
-    float centerX = pivotX + offsetX;
-    float centerY = pivotY + offsetY;
-
-    // Now draw the rectangle with its center at (centerX, centerY) and rotation = angle
-    drawRotatedRect(centerX, centerY, turretW, turretH, angle);
+    drawTurret(&turrets[i], pivotX, pivotY);
   }
 }
 
@@ -476,7 +605,7 @@ void drawRotatedTriangle(bool filled, int linesToDraw, float screenX, float scre
   int iy3 = (int)(screenY + ry3);
 
   // arduboy.drawTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
-  if(linesToDraw == 0b111){
+  if(linesToDraw == 0b111 || filled){
     if(filled){
       arduboy.fillTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
     }
@@ -542,69 +671,24 @@ void drawShip(bool smallShip, bool simpleStyle, float screenX, float screenY, fl
     x2 = 0;  y2 = 7;
     x3 = 2;   y3 = 3;
     if(currentFuel > 0){
-      drawRotatedTriangle(false, 0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+      drawRotatedTriangle(true, 0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
     }
   }
   if(arduboy.pressed(DOWN_BUTTON)){
-    //Draw tractor beam
-    x1 = -15;   y1 = 25;
-    x2 = 0;  y2 = 0;
-    x3 = 15;   y3 = 25;
-    drawRotatedTriangle(false, 0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
-    //Draw shield
-    drawRotatedRect(screenX, screenY, 12, 12, angle);
+    if(currentFuel > 0){
+      //Draw tractor beam
+      x1 = -15;   y1 = 25;
+      x2 = 0;  y2 = 0;
+      x3 = 15;   y3 = 25;
+      drawRotatedTriangle(false, 0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+      //Draw shield
+      drawRotatedRect(screenX, screenY, 12, 12, angle);
+    }
+
   }
 
 }
 
-//My coordinates may be off
-// I should try drawing an unrotated square first
-// Draws a rotated rectangle of given width & height, centered at (screenX, screenY), at the specified angle.
-void drawRotatedRect(float screenX, float screenY, float width, float height, float angle) 
-{
-  // Half dimensions so the rectangle is centered at (0, 0) before translation
-  float halfW = width * 0.5;
-  float halfH = height * 0.5;
 
-  // Rectangle corners relative to center
-  // We'll define them in a clockwise (or counter-clockwise) order
-  float x1 = -halfW;  float y1 = -halfH;  // top-left
-  float x2 =  halfW;  float y2 = -halfH;  // top-right
-  float x3 =  halfW;  float y3 =  halfH;  // bottom-right
-  float x4 = -halfW;  float y4 =  halfH;  // bottom-left
-
-  // Precompute sine and cosine of the angle
-  float cosA = cos(angle);
-  float sinA = sin(angle);
-
-  // Rotate each corner
-  float rx1 = x1 * cosA - y1 * sinA;
-  float ry1 = x1 * sinA + y1 * cosA;
-
-  float rx2 = x2 * cosA - y2 * sinA;
-  float ry2 = x2 * sinA + y2 * cosA;
-
-  float rx3 = x3 * cosA - y3 * sinA;
-  float ry3 = x3 * sinA + y3 * cosA;
-
-  float rx4 = x4 * cosA - y4 * sinA;
-  float ry4 = x4 * sinA + y4 * cosA;
-
-  // Translate to the screen position
-  int ix1 = (int)(screenX + rx1);
-  int iy1 = (int)(screenY + ry1);
-  int ix2 = (int)(screenX + rx2);
-  int iy2 = (int)(screenY + ry2);
-  int ix3 = (int)(screenX + rx3);
-  int iy3 = (int)(screenY + ry3);
-  int ix4 = (int)(screenX + rx4);
-  int iy4 = (int)(screenY + ry4);
-
-  // Draw the edges of the rectangle (4 lines)
-  arduboy.drawLine(ix1, iy1, ix2, iy2, WHITE);
-  arduboy.drawLine(ix2, iy2, ix3, iy3, WHITE);
-  arduboy.drawLine(ix3, iy3, ix4, iy4, WHITE);
-  arduboy.drawLine(ix4, iy4, ix1, iy1, WHITE);
-}
 
 

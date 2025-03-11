@@ -2,13 +2,12 @@
 #include <math.h>
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   delay(2000);
   arduboy.begin();
   arduboy.setFrameRate(FRAME_RATE);
   //Add a start screen instead of this delay so I can use a button presss randomness to seed random.
-  //This allows for random in both simular and hardware
-  delay(1);  
+  //This allows for random in both simular and hardware 
   randomSeed(micros()); 
   circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
   
@@ -118,18 +117,19 @@ void death() {
         break;
       }
     }
+    randomSeed(micros()); 
+    circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
+
+    generateFuelPickups(NUM_FUEL_PICKUPS);
+    generateTurrets(MAX_TURRETS);
+    generateStars();
     
   }
 
   resetShip();
 
 
-  randomSeed(micros()); 
-  circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
 
-  generateFuelPickups(NUM_FUEL_PICKUPS);
-  generateTurrets(MAX_TURRETS);
-  generateStars();
 
   // Reset bullets.
   for (int i = 0; i < MAX_BULLETS; i++) {
@@ -149,44 +149,72 @@ void death() {
 
 void tractorBeam(){
   currentFuel -= TRACTOR_FUEL_BURN_RATE / FRAME_RATE;
+  if(currentFuel > 0){
+    // Tractor beam triangle in ship-local coordinates
+    float localX1 = -15, localY1 = 25;
+    float localX2 = 0,   localY2 = 0;
+    float localX3 = 15,  localY3 = 25;
+    
+    // Compute rotation factors
+    float cosA = cos(shipAngle);
+    float sinA = sin(shipAngle);
+    
+    // Rotate and translate the points into world coordinates
+    float beamX1 = shipX + (localX1 * cosA - localY1 * sinA);
+    float beamY1 = shipY + (localX1 * sinA + localY1 * cosA);
+    
+    float beamX2 = shipX + (localX2 * cosA - localY2 * sinA);
+    float beamY2 = shipY + (localX2 * sinA + localY2 * cosA);
+    
+    float beamX3 = shipX + (localX3 * cosA - localY3 * sinA);
+    float beamY3 = shipY + (localX3 * sinA + localY3 * cosA);
+    
+    // Check all fuel pickups to see if they lie within the tractor beam triangle
+    for (int i = 0; i < pickupCount; ) { 
+      if (pointInTriangle(fuelPickups[i].x, fuelPickups[i].y, beamX1, beamY1, beamX2, beamY2, beamX3, beamY3)) {
+        // Add fuel to the ship
+        currentFuel += FUEL_PER_PICKUP;
+        
+        // Replace the removed pickup with the last one in the array
+        fuelPickups[i] = fuelPickups[pickupCount - 1];
+        pickupCount--;
 
-  // Tractor beam triangle in ship-local coordinates
-  float localX1 = -15, localY1 = 25;
-  float localX2 = 0,   localY2 = 0;
-  float localX3 = 15,  localY3 = 25;
-  
-  // Compute rotation factors
-  float cosA = cos(shipAngle);
-  float sinA = sin(shipAngle);
-  
-  // Rotate and translate the points into world coordinates
-  float beamX1 = shipX + (localX1 * cosA - localY1 * sinA);
-  float beamY1 = shipY + (localX1 * sinA + localY1 * cosA);
-  
-  float beamX2 = shipX + (localX2 * cosA - localY2 * sinA);
-  float beamY2 = shipY + (localX2 * sinA + localY2 * cosA);
-  
-  float beamX3 = shipX + (localX3 * cosA - localY3 * sinA);
-  float beamY3 = shipY + (localX3 * sinA + localY3 * cosA);
-  
-  // Check all fuel pickups to see if they lie within the tractor beam triangle
-  for (int i = 0; i < pickupCount; ) { 
-    if (pointInTriangle(fuelPickups[i].x, fuelPickups[i].y, beamX1, beamY1, beamX2, beamY2, beamX3, beamY3)) {
-      // Add fuel to the ship
-      currentFuel += FUEL_PER_PICKUP;
-      
-      // Replace the removed pickup with the last one in the array
-      fuelPickups[i] = fuelPickups[pickupCount - 1];
-      pickupCount--;
-
-      // Do NOT increment i here to recheck the swapped pickup
-    } else {
-      i++; // Only increment if no deletion occurred
+        // Do NOT increment i here to recheck the swapped pickup
+      } else {
+        i++; // Only increment if no deletion occurred
+      }
     }
   }
 }
 
+void updateBullets(){
+  for (int i = 0; i < MAX_BULLETS; i++) {
+    if (bullets[i].active) {
+      // Move bullet
+      bullets[i].x += bullets[i].vx;
+      bullets[i].y += bullets[i].vy;
 
+      // Optionally deactivate if off-screen or out of world
+      if (bullets[i].x < 0 || bullets[i].x > worldWidth ||
+          bullets[i].y < 0 || bullets[i].y > worldHeight) {
+        bullets[i].active = false;
+      }
+      for (int t = 0; t < MAX_TURRETS; t++) {
+        if(pointInRectangle(bullets[i].x, bullets[i].y, &turrets[t])){
+          // Destroy bullet
+          score += TURRET_SCORE;
+          bullets[i].active = false;
+          turretCount--;
+          turrets[t] = turrets[turretCount];
+          break;
+        }
+      }
+    }
+  }
+
+
+  
+}
 
 
 void loop() {
@@ -267,64 +295,9 @@ void loop() {
     spawnBullet(shipX, shipY, shipAngle);
   }
 
-  // --- 4. Update Bullets ---
-  for (int i = 0; i < MAX_BULLETS; i++) {
-    if (bullets[i].active) {
-      // Move bullet
-      bullets[i].x += bullets[i].vx;
-      bullets[i].y += bullets[i].vy;
+  updateBullets();
+  
 
-      // Optionally deactivate if off-screen or out of world
-      if (bullets[i].x < 0 || bullets[i].x > worldWidth ||
-          bullets[i].y < 0 || bullets[i].y > worldHeight) {
-        bullets[i].active = false;
-      }
-    }
-  }
-
-  // Check collision with turrets
-  for (int i = 0; i < MAX_BULLETS; i++) {
-    if (bullets[i].active) {
-      // 1. Move the bullet
-      bullets[i].x += bullets[i].vx;
-      bullets[i].y += bullets[i].vy;
-
-      // 2. Deactivate if off-screen or out of world
-      if (bullets[i].x < 0 || bullets[i].x > worldWidth ||
-          bullets[i].y < 0 || bullets[i].y > worldHeight) {
-        bullets[i].active = false;
-      }
-      else {
-        // 3. Check collision with each turret
-        for (int t = 0; t < MAX_TURRETS; t++) {
-          //These corners aren't right,  they aren't rotated with the turret
-          // if(pointInRectangle(
-          //   bullets[i].x, bullets[i].y,
-          //   turrets[t].x - 2, turrets[t].y - 4,  // Corner 1
-          //   turrets[t].x + 2, turrets[t].y - 4,  // Corner 2
-          //   turrets[t].x + 2, turrets[t].y + 4,  // Corner 3
-          //   turrets[t].x - 2, turrets[t].y + 4   // Corner 4
-          // )
-          // ){
-          //   // Deactivate bullet
-          //   bullets[i].active = false;
-          //   // Destroy turret
-          //   turretCount--;
-          //   turrets[t] = turrets[turretCount];
-          //   break;
-          // }
-          if(isWithinDistance(bullets[i].x, bullets[i].y, turrets[t].x, turrets[t].y, 4)){
-            // Destroy bullet
-            score += TURRET_SCORE;
-            bullets[i].active = false;
-            turretCount--;
-            turrets[t] = turrets[turretCount];
-            break;
-          }
-        }
-      }
-    }
-  }
 
   if (arduboy.pressed(DOWN_BUTTON)){
     tractorBeam();
@@ -335,12 +308,13 @@ void loop() {
 
   // Stars (background, parallax)
   drawStars();
+  drawAllTurrets();
   drawTurretBullets();
 
   // Planet circle (optional regen with some other input if you like)
   drawPlanet(true, false, false, false);
 
-  drawAllTurrets();
+  
   drawAllFuelPickups();
 
 
@@ -348,8 +322,8 @@ void loop() {
   // Draw the ship
   float screenShipX = shipX - cameraX;
   float screenShipY = shipY - cameraY;
-  drawShip(true, true, screenShipX, screenShipY, shipAngle);
-  if (pointInPlanet(shipX, shipY)) {
+  drawShip(false, false, screenShipX, screenShipY, shipAngle);
+  if (pointInPolygon(circle_num_points, circle_points, shipX, shipY)) {
     arduboy.print("HIT PLANET!");
     death();
   }
