@@ -92,8 +92,8 @@ void updateTurretBullets() {
 
 void resetShip(){
   // Reset ship to starting position in the middle of the world.
-  shipX     = worldWidth / 2;
-  shipY     = planetMaxRadius + 10;  
+  shipX     = startX;
+  shipY     = startY;  
   shipAngle = 0;
   velX      = 0;
   velY      = 0;
@@ -111,6 +111,7 @@ void death() {
     arduboy.println("Press any button");
     arduboy.println("to restart");
     arduboy.display();
+    delay(1000);
     while(true){
       arduboy.pollButtons();
       if(arduboy.buttonsState()){

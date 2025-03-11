@@ -319,16 +319,16 @@ void setTurretCorners(Turret* turret, float screenX, float screenY, float width,
   turret->p3.y = turret->y + ry3;
   turret->p4.x = turret->x + rx4;
   turret->p4.y = turret->y + ry4;
-  Serial.println("Turret:");
-  Serial.println("Pos:");
-  Serial.print(turret->x);
-  Serial.print(" , ");
-  Serial.println(turret->y);
-  Serial.println("Corners:");
-  Serial.print(turret->p1.x); Serial.print(" , "); Serial.println(turret->p1.y);
-  Serial.print(turret->p2.x); Serial.print(" , "); Serial.println(turret->p2.y);
-  Serial.print(turret->p3.x); Serial.print(" , "); Serial.println(turret->p3.y);
-  Serial.print(turret->p4.x); Serial.print(" , "); Serial.println(turret->p4.y);
+  // Serial.println("Turret:");
+  // Serial.println("Pos:");
+  // Serial.print(turret->x);
+  // Serial.print(" , ");
+  // Serial.println(turret->y);
+  // Serial.println("Corners:");
+  // Serial.print(turret->p1.x); Serial.print(" , "); Serial.println(turret->p1.y);
+  // Serial.print(turret->p2.x); Serial.print(" , "); Serial.println(turret->p2.y);
+  // Serial.print(turret->p3.x); Serial.print(" , "); Serial.println(turret->p3.y);
+  // Serial.print(turret->p4.x); Serial.print(" , "); Serial.println(turret->p4.y);
 
 
 }
@@ -420,10 +420,13 @@ Point2D* randomCircle(int angle_step, float min_distance, float max_distance) {
     pt.y += randomFloat(-2.0f, 2.0f);
 
     points[i] = pt;
-    if(i == 0){
-        startX = worldCenterX + pt.x;
-        startY = worldCenterY + pt.y - 10;
-    }
+    // if(i == 0){
+    //   Serial.print(pt.x);
+    //   Serial.print(" , ");
+    //   Serial.println(pt.y);
+    //     startX = pt.x;
+    //     startY = pt.y;
+    // }
   }
   // 1. Compute centroid
   float sumX = 0;
@@ -491,23 +494,7 @@ void generateTurrets(int numTurrets) {
     float pivotY = turrets[i].y - cameraY;
     float angle  = turrets[i].angle;       // tangent + π/2 (or however you computed)
 
-    // // Half-sizes
-    // float halfW = turrets[i].w * 0.5;
-    // float halfH = turrets[i].h * 0.5;
-
-    // // We want the rectangle's bottom edge at the pivot. 
-    // // In local coords, that bottom edge = +halfH.
-    // // So we shift the center by (0, -halfH) in local space, then rotate it.
-    // float offsetX =  (0.0f) * cos(angle) - (-halfH) * sin(angle);
-    // float offsetY =  (0.0f) * sin(angle) + (-halfH) * cos(angle);
-
-    // float centerX = pivotX + offsetX;
-    // float centerY = pivotY + offsetY;
-
     setTurretCorners(&turrets[i], pivotX, pivotY, turrets[i].w, turrets[i].h);
-    // drawTurret(&turrets[i], centerX, centerY);
-    // drawRotatedRect(centerX, centerY, turretW, turretH, angle);
-    
   }
 
   // Also init all turret bullets as inactive
@@ -580,10 +567,6 @@ void drawPolygonLines(Point2D* points, int num_points, bool close_shape) {
 
 //Use drawline instead of drawTriangle so you can skip one of the lines
 void drawRotatedTriangle(bool filled, int linesToDraw, float screenX, float screenY, float angle, int x1, int y1, int x2, int y2, int x3, int y3){
-  // Triangle points relative to ship center
-  // float x1 = 0,   y1 = -4;
-  // float x2 = -3,  y2 = 4;
-  // float x3 = 3,   y3 = 4;
 
   float cosA = cos(angle);
   float sinA = sin(angle);

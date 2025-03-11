@@ -10,8 +10,8 @@ Font3x5 font3x5 = Font3x5();
 // -----------------------
 const int screenWidth  = 128;
 const int screenHeight = 64;
-const int planetMinRadius = 40;
-const int planetMaxRadius = 90;
+const int planetMinRadius = 80;
+const int planetMaxRadius = 120;
 const int planetStepAngle = 25;
 
 const int worldWidth  = 512;
@@ -37,8 +37,8 @@ const int THRUST_FUEL_BURN_RATE = 1000; //per second when thrusting
 const int TRACTOR_FUEL_BURN_RATE = 2000; //extra fuel burned per second when tractor beam is active
 int currentFuel = DEFAULT_FUEL;
 int score = 0;
-float startX;
-float startY;
+float startX = worldWidth / 2;
+float startY = 256 - (planetMaxRadius + 25);  
 
 struct FuelPickup {
     float x;
