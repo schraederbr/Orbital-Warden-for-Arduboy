@@ -9,7 +9,7 @@ void setup() {
   //Add a start screen instead of this delay so I can use a button presss randomness to seed random.
   //This allows for random in both simular and hardware 
   randomSeed(micros()); 
-  circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
+  randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
   
   // for (int i = 0; i < circle_num_points; i++) {
   //   Serial.print("Point ");
@@ -52,19 +52,26 @@ void updateTurrets() {
 }
 
 void updateTurretBullets() {
-  // if (gameOver) return; // no need if game stops updating on gameOver
 
   for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
     if (turretBullets[i].active) {
       // Move bullet
       turretBullets[i].x += turretBullets[i].vx;
       turretBullets[i].y += turretBullets[i].vy;
-
+      if (pointInPolygon(circle_num_points, circle_points, turretBullets[i].x, turretBullets[i].y)) {
+        turretBullets[i].active = false;
+        turretBullets[i].framesAlive = 0;
+      }
       // Check if out of world, deactivate
       if (turretBullets[i].x < 0 || turretBullets[i].x > worldWidth ||
           turretBullets[i].y < 0 || turretBullets[i].y > worldHeight) {
         turretBullets[i].active = false;
+        turretBullets[i].framesAlive = 0;
         continue;
+      }
+      if(turretBullets[i].framesAlive > MAX_TURRET_BULLET_FRAMES_ALIVE){
+        turretBullets[i].active = false;
+        turretBullets[i].framesAlive = 0;
       }
       //Down button means the shield is active
       if(!arduboy.pressed(DOWN_BUTTON)){
@@ -74,7 +81,7 @@ void updateTurretBullets() {
         float dx = turretBullets[i].x - shipX;
         float dy = turretBullets[i].y - shipY;
         float distSq = dx*dx + dy*dy;
-        float collideRadius = 5.0f;   // tweak as needed
+        float collideRadius = 3.0f;   // tweak as needed
         if (distSq < (collideRadius * collideRadius)) {
           // Hit the player!
           death();
@@ -99,6 +106,22 @@ void resetShip(){
   velY      = 0;
 }
 
+void resetBullets(){
+  // Reset bullets.
+  for (int i = 0; i < MAX_BULLETS; i++) {
+    bullets[i].active = false;
+  }
+  
+  // Reset turret timers (so they don't all fire immediately)
+  for (int t = 0; t < turretCount; t++) {
+    turrets[t].fireTimer = random(0, TURRET_FIRE_DELAY);
+  }
+
+  for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
+    turretBullets[i].active = false;
+  }
+}
+
 void death() {
   lives--;
   if(lives <= 0){
@@ -119,32 +142,20 @@ void death() {
       }
     }
     randomSeed(micros()); 
-    circle_points = randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
+    randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
 
     generateFuelPickups(NUM_FUEL_PICKUPS);
     generateTurrets(MAX_TURRETS);
     generateStars();
     
   }
-
+  frames_alive = 0;
   resetShip();
+  resetBullets();
 
 
 
 
-  // Reset bullets.
-  for (int i = 0; i < MAX_BULLETS; i++) {
-    bullets[i].active = false;
-  }
-  
-  // Reset turret timers (so they don't all fire immediately)
-  for (int t = 0; t < turretCount; t++) {
-    turrets[t].fireTimer = random(0, TURRET_FIRE_DELAY);
-  }
-
-  for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
-    turretBullets[i].active = false;
-  }
 }
 
 
@@ -175,7 +186,7 @@ void tractorBeam(){
       if (pointInTriangle(fuelPickups[i].x, fuelPickups[i].y, beamX1, beamY1, beamX2, beamY2, beamX3, beamY3)) {
         // Add fuel to the ship
         currentFuel += FUEL_PER_PICKUP;
-        
+        score += FUEL_PICKUP_SCORE;
         // Replace the removed pickup with the last one in the array
         fuelPickups[i] = fuelPickups[pickupCount - 1];
         pickupCount--;
@@ -191,14 +202,24 @@ void tractorBeam(){
 void updateBullets(){
   for (int i = 0; i < MAX_BULLETS; i++) {
     if (bullets[i].active) {
+      bullets[i].framesAlive++;
       // Move bullet
       bullets[i].x += bullets[i].vx;
       bullets[i].y += bullets[i].vy;
-
+      //If bullet hits planet, delete
+      if (pointInPolygon(circle_num_points, circle_points, bullets[i].x, bullets[i].y)) {
+        bullets[i].active = false;
+        bullets[i].framesAlive = 0;
+      }
       // Optionally deactivate if off-screen or out of world
       if (bullets[i].x < 0 || bullets[i].x > worldWidth ||
           bullets[i].y < 0 || bullets[i].y > worldHeight) {
         bullets[i].active = false;
+        bullets[i].framesAlive = 0;
+      }
+      if(bullets[i].framesAlive > MAX_BULLET_FRAMES_ALIVE){
+        bullets[i].active = false;
+        bullets[i].framesAlive = 0;
       }
       for (int t = 0; t < MAX_TURRETS; t++) {
         if(pointInRectangle(bullets[i].x, bullets[i].y, &turrets[t])){
@@ -222,7 +243,7 @@ void loop() {
   if (!arduboy.nextFrame()) return;
   arduboy.pollButtons();
   arduboy.clear();
-
+  frames_alive++;
   // --- 1. Ship Controls ---
   if (arduboy.pressed(LEFT_BUTTON)) {
     shipAngle -= ROTATION_SPEED;

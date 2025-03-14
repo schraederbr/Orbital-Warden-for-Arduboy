@@ -282,6 +282,10 @@ void setTurretCorners(Turret* turret, float screenX, float screenY, float width,
 
   // Rectangle corners relative to center
   // We'll define them in a clockwise (or counter-clockwise) order
+
+  //Use this if you want the turret to be smaller on the top, similar to the turret shape in gravitar
+  //float x1 = -halfW/2;  float y1 = -halfH;  // top-left
+  // float x2 =  halfW/2;  float y2 = -halfH;  // top-right
   float x1 = -halfW;  float y1 = -halfH;  // top-left
   float x2 =  halfW;  float y2 = -halfH;  // top-right
   float x3 =  halfW;  float y3 =  halfH;  // bottom-right
@@ -393,9 +397,9 @@ Point2D randomPointAtAngle(float angle_deg, float min_distance, float max_distan
 }
 
 // Generates an array of slightly irregular points forming a "random circle."
-Point2D* randomCircle(int angle_step, float min_distance, float max_distance) {
+void randomCircle(int angle_step, float min_distance, float max_distance) {
   // We still produce approximately (360 / angle_step) points:
-  Point2D* points = new Point2D[circle_num_points];
+  // Point2D* points = new Point2D[circle_num_points];
 
   for (int i = 0; i < circle_num_points; i++) {
     // Base angle for this index
@@ -419,7 +423,7 @@ Point2D* randomCircle(int angle_step, float min_distance, float max_distance) {
     pt.x += randomFloat(-2.0f, 2.0f);
     pt.y += randomFloat(-2.0f, 2.0f);
 
-    points[i] = pt;
+    circle_points[i] = pt;
     // if(i == 0){
     //   Serial.print(pt.x);
     //   Serial.print(" , ");
@@ -432,15 +436,13 @@ Point2D* randomCircle(int angle_step, float min_distance, float max_distance) {
   float sumX = 0;
   float sumY = 0;
   for (int i = 0; i < circle_num_points; i++) {
-    sumX += points[i].x;
-    sumY += points[i].y;
+    sumX += circle_points[i].x;
+    sumY += circle_points[i].y;
   }
   circleCenterX = (int)(float(sumX) / circle_num_points);
   circleCenterY = (int)(float(sumY) / circle_num_points);
 
 
-
-  return points;
 }
 
 void generateFuelPickups(int numFuelPickups){

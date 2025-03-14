@@ -5,6 +5,9 @@
 Arduboy2 arduboy;
 Font3x5 font3x5 = Font3x5();
 
+//Frame count since starting life
+int frames_alive = 0;
+
 // -----------------------
 // World & Camera Settings
 // -----------------------
@@ -33,6 +36,7 @@ int lives = DEFAULT_LIVES;
 const int NUM_FUEL_PICKUPS = 3;
 const int DEFAULT_FUEL = 20000;
 const int FUEL_PER_PICKUP = 2500;
+const int FUEL_PICKUP_SCORE = 100;
 const int THRUST_FUEL_BURN_RATE = 1000; //per second when thrusting
 const int TRACTOR_FUEL_BURN_RATE = 2000; //extra fuel burned per second when tractor beam is active
 int currentFuel = DEFAULT_FUEL;
@@ -69,39 +73,14 @@ struct Turret {
   Point2D p3;
   Point2D p4;
 };
-Point2D* circle_points = nullptr;
+// Point2D* circle_points = nullptr;
+static Point2D circle_points[360 / planetStepAngle];
 const int circle_num_points  = (int)(360 / planetStepAngle);
 //Might want these to be float
 int circleCenterX = 0;
 int circleCenterY = 0;
 const int MAX_TURRETS = 5; // how many stars you want
 bool gameOver = false;
-
-// Turret bullet data
-static const int MAX_TURRET_BULLETS = 10;
-
-struct TurretBullet {
-  bool active;
-  float x;
-  float y;
-  float vx;
-  float vy;
-};
-
-TurretBullet turretBullets[MAX_TURRET_BULLETS];
-
-// Each turret also needs a timer for shooting, say it fires every N frames
-// We'll store this in your Turret struct, or a parallel array of timers.
-static const int TURRET_FIRE_DELAY = 120; // frames between shots (~0.5s at 120fps)
-
-
-
-Turret turrets[MAX_TURRETS];
-int turretCount = 0;
-
-
-// Maximum number of on-screen bullets
-static const int MAX_BULLETS = 5;
 
 // Simple bullet structure
 struct Bullet {
@@ -110,7 +89,31 @@ struct Bullet {
   float y;      // World position
   float vx;     // Velocity X
   float vy;     // Velocity Y
+  int framesAlive = 0;
 };
+
+// Turret bullet data
+static const int MAX_TURRET_BULLETS = 15;
+static const int MAX_TURRET_BULLET_FRAMES_ALIVE = 120;
+
+
+Bullet turretBullets[MAX_TURRET_BULLETS];
+
+// Each turret also needs a timer for shooting, say it fires every N frames
+// We'll store this in your Turret struct, or a parallel array of timers.
+static const int TURRET_FIRE_DELAY = 90; 
+//Frames before turrets start firing when you start the game. 
+static const int TURRET_START_DELAY = 180;
+
+
+Turret turrets[MAX_TURRETS];
+int turretCount = 0;
+
+
+// Maximum number of on-screen bullets
+static const int MAX_BULLETS = 5;
+static const float MAX_BULLET_FRAMES_ALIVE = 120;
+
 
 // The global array of bullets
 Bullet bullets[MAX_BULLETS];
@@ -140,29 +143,32 @@ void spawnBullet(float x, float y, float angle) {
 
 
 void spawnTurretBullet(float x, float y, float targetX, float targetY) {
-  // Find an inactive slot
-  for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
-    if (!turretBullets[i].active) {
-      turretBullets[i].active = true;
+  //Do short delay so player doesn't get immediately shot
+  if(frames_alive > TURRET_START_DELAY){
+    // Find an inactive slot
+    for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
+      if (!turretBullets[i].active) {
+        turretBullets[i].active = true;
 
-      // Start at turret position
-      turretBullets[i].x = x;
-      turretBullets[i].y = y;
+        // Start at turret position
+        turretBullets[i].x = x;
+        turretBullets[i].y = y;
 
-      // Aim at (targetX, targetY)
-      float dx = targetX - x;
-      float dy = targetY - y;
-      float length = sqrt(dx*dx + dy*dy);
-      if (length < 0.001f) {
-        length = 0.001f; // avoid divide by zero
+        // Aim at (targetX, targetY)
+        float dx = targetX - x;
+        float dy = targetY - y;
+        float length = sqrt(dx*dx + dy*dy);
+        if (length < 0.001f) {
+          length = 0.001f; // avoid divide by zero
+        }
+
+        float speed = 0.5f; // adjust bullet speed as desired
+        turretBullets[i].vx = (dx / length) * speed;
+        turretBullets[i].vy = (dy / length) * speed;
+
+        // Done
+        break;
       }
-
-      float speed = 0.5f; // adjust bullet speed as desired
-      turretBullets[i].vx = (dx / length) * speed;
-      turretBullets[i].vy = (dy / length) * speed;
-
-      // Done
-      break;
     }
   }
 }
