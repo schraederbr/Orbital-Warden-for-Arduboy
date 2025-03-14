@@ -248,17 +248,19 @@ bool isWithinDistance(float x1, float y1, float x2, float y2, float distance) {
 // Returns true if the point (px,py) is inside the polygon
 bool pointInPolygon(int numPoints, const Point2D points[], float px, float py) {
   bool inside = false;
+  int pxInt = (int)px;
+  int pyInt = (int)py;
   // The planet is defined by circle_points.
   // Each point in circle_points is relative to (0,0); the actual world position is offset by worldCenterX/Y.
   int j = numPoints - 1;
   for (int i = 0; i < numPoints; i++) {
-    float xi = points[i].x + worldCenterX;
-    float yi = points[i].y + worldCenterY;
-    float xj = points[j].x + worldCenterX;
-    float yj = points[j].y + worldCenterY;
+    int xi = (int)points[i].x + worldCenterX;
+    int yi = (int)points[i].y + worldCenterY;
+    int xj = (int)points[j].x + worldCenterX;
+    int yj = (int)points[j].y + worldCenterY;
     // Check if the ray crosses the edge
-    if (((yi > py) != (yj > py)) &&
-         (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) {
+    if (((yi > pyInt) != (yj > pyInt)) &&
+         (pxInt < (xj - xi) * (pyInt - yi) / (yj - yi) + xi)) {
       inside = !inside;
     }
     j = i;
