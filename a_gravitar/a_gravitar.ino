@@ -42,7 +42,7 @@ const int TRACTOR_FUEL_BURN_RATE = 2000; //extra fuel burned per second when tra
 int currentFuel = DEFAULT_FUEL;
 int score = 0;
 float startX = worldWidth / 2;
-float startY = 256 - (planetMaxRadius + 25);  
+float startY = 256 - (planetMaxRadius + 10);  
 const float turretWidth = 3.0;
 const float turretHeight = 6.0;
 struct FuelPickup {

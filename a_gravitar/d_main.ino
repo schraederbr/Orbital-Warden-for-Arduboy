@@ -3,7 +3,6 @@
 
 void setup() {
   Serial.begin(115200);
-  delay(2000);
   arduboy.begin();
   arduboy.setFrameRate(FRAME_RATE);
   //Add a start screen instead of this delay so I can use a button presss randomness to seed random.
@@ -125,16 +124,21 @@ void resetBullets(){
 void death() {
   lives--;
   if(lives <= 0){
+    arduboy.clear();
+    arduboy.setCursor(0,0);
+    arduboy.println("Game Over!");
+    arduboy.println("Final Score: ");
+    arduboy.println(score);
+    arduboy.display();
+    delay(1000);
     lives = DEFAULT_LIVES;
     currentFuel = DEFAULT_FUEL;
     score = 0;
-    arduboy.clear();
-    arduboy.setCursor(10, 30);
-    arduboy.println("Game Over!");
+
     arduboy.println("Press any button");
     arduboy.println("to restart");
     arduboy.display();
-    delay(1000);
+    
     while(true){
       arduboy.pollButtons();
       if(arduboy.buttonsState()){
@@ -233,11 +237,39 @@ void updateBullets(){
       }
     }
   }
-
-
-  
 }
 
+void checkPlanetComplete(){
+  if(turretCount <= 0 && pickupCount <= 0){
+    arduboy.clear();
+    arduboy.setCursor(0, 0);
+    arduboy.println("Planet Complete!");
+    arduboy.println("Current score: " );
+    arduboy.println(score);
+    arduboy.display();
+    delay(1000);
+    arduboy.println("Press any button");
+    arduboy.println("to start new planet");
+    arduboy.display();
+    
+    while(true){
+      arduboy.pollButtons();
+      if(arduboy.buttonsState()){
+        break;
+      }
+    }
+    randomSeed(micros()); 
+    randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
+
+    generateFuelPickups(NUM_FUEL_PICKUPS);
+    generateTurrets(MAX_TURRETS);
+    generateStars();
+      
+    frames_alive = 0;
+    resetShip();
+    resetBullets();
+  }
+}
 
 void loop() {
   if (!arduboy.nextFrame()) return;
@@ -365,4 +397,5 @@ void loop() {
   // arduboy.print(shipY);
   // font3x5.print(lives);
   arduboy.display();
+  checkPlanetComplete();
 }
