@@ -43,6 +43,16 @@ int currentFuel = DEFAULT_FUEL;
 int score = 0;
 float startX = worldWidth / 2;
 float startY = 256 - (planetMaxRadius + 10);  
+float shipX, shipY;  // Position of the ship in "world" coordinates
+float shipAngle;      // Ship’s facing angle in radians
+float velX, velY;     // Velocity
+
+const float ACCELERATION   = 0.02f;  // How fast the ship accelerates
+const float ROTATION_SPEED = 0.1f;  // Radians/frame rotation
+const float FRICTION       = 0.997f; // Slows the ship gradually
+const float GRAVITY_ACCEL = 0.005f;  // Adjust this constant to change gravity strength.
+
+
 const float turretWidth = 3.0;
 const float turretHeight = 6.0;
 struct FuelPickup {
