@@ -5,7 +5,8 @@
 #include <FixedPointsCommon.h>
 Arduboy2 arduboy;
 Font3x5 font3x5 = Font3x5();
-using FP = SFixed<10, 8>;
+//This probably uses 32 bit math so we might as well boost it up
+using FP = SFixed<11,20>;
 
 //Frame count since starting life
 int frames_alive = 0;
