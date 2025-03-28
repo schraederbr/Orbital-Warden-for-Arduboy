@@ -1,9 +1,158 @@
 #include <Arduboy2.h>
 #include <math.h>
 
+
+// Test function with random data, using fixed-point
+void testFixedPointInPolygon() {
+  const int numTests = 3;   // how many random polygons to generate
+  const int minPoints = 3;  // min vertices
+  const int maxPoints = 6;  // max vertices
+
+  Serial.println(F("Starting testPointInPolygon with fixed-point random data"));
+
+  for (int t = 0; t < numTests; t++) {
+    // Generate a random polygon size
+    int numPoints = random(minPoints, maxPoints + 1);
+
+    // Allocate our polygon array
+    FixedPoint2D *testPolygon = new FixedPoint2D[numPoints];
+
+    // Fill the polygon with random integer coordinates, then construct fixed-point
+    // FP can handle approximately ±127.0 for the integer portion
+    for (int i = 0; i < numPoints; i++) {
+      int16_t rx = random(-50, 51); // in the range [-50..50]
+      int16_t ry = random(-50, 51);
+      testPolygon[i].x = FP(rx);
+      testPolygon[i].y = FP(ry);
+    }
+
+    Serial.print(F("Generated random polygon #"));
+    Serial.println(t);
+    for (int i = 0; i < numPoints; i++) {
+      Serial.print(F("  P"));
+      Serial.print(i);
+      Serial.print(F(": ("));
+      Serial.print((float)testPolygon[i].x);
+      Serial.print(F(", "));
+      Serial.print((float)testPolygon[i].y);
+      Serial.println(F(")"));
+    }
+
+    // Generate a random test point in the same range
+    FP testX = FP((int16_t)random(0, 511));
+    FP testY = FP((int16_t)random(0, 511));
+
+    Serial.print(F("Test point for polygon #"));
+    Serial.print(t);
+    Serial.print(F(": ("));
+    Serial.print((float)testX);
+    Serial.print(F(", "));
+    Serial.print((float)testY);
+    Serial.println(F(")"));
+
+    // Measure time
+    unsigned long startTime = micros();
+    bool inside = fixedPointInPolygon(numPoints, testPolygon, testX, testY);
+    unsigned long endTime = micros();
+
+    // Print timing and results
+    Serial.print(F("Random test #"));
+    Serial.print(t);
+    Serial.print(F(" -> Point is "));
+    Serial.println(inside ? F("INSIDE") : F("OUTSIDE"));
+
+    unsigned long totalTime = endTime - startTime;
+    Serial.print(F("Execution time (microseconds): "));
+    Serial.println(totalTime);
+    Serial.println();
+
+    delete[] testPolygon;
+  }
+
+  Serial.println(F("Ending testFixedPointInPolygon\n"));
+}
+
+
+void testPointInPolygon() {
+  // We'll create multiple random polygons & random points in a loop
+  const int numTests = 3; // how many polygons to generate/test
+  const int maxPoints = 6; // max number of vertices per polygon
+  const int minPoints = 3; // min number of vertices per polygon
+
+  Serial.println(F("Starting testPointInPolygon with random data"));
+
+  for (int t = 0; t < numTests; t++) {
+    // Generate a random polygon size in [minPoints, maxPoints]
+    int numPoints = random(minPoints, maxPoints + 1);
+
+    // Allocate a local array for the polygon
+    Point2D *testPolygon = new Point2D[numPoints];
+
+    // Fill the polygon with random coordinates
+    // Adjust range as appropriate for your project
+    for (int i = 0; i < numPoints; i++) {
+      testPolygon[i].x = random(-50, 51);  // e.g. [-50..50]
+      testPolygon[i].y = random(-50, 51);  // e.g. [-50..50]
+    }
+
+    // Print the random polygon
+    Serial.print(F("Generated random polygon #"));
+    Serial.println(t);
+    for (int i = 0; i < numPoints; i++) {
+      Serial.print(F("  P"));
+      Serial.print(i);
+      Serial.print(F(": ("));
+      Serial.print(testPolygon[i].x);
+      Serial.print(F(", "));
+      Serial.print(testPolygon[i].y);
+      Serial.println(F(")"));
+    }
+
+    // Generate a random test point
+    float testX = (float)random(-50, 51);
+    float testY = (float)random(-50, 51);
+
+    Serial.print(F("Test point for polygon #"));
+    Serial.print(t);
+    Serial.print(F(": ("));
+    Serial.print(testX);
+    Serial.print(F(", "));
+    Serial.print(testY);
+    Serial.println(F(")"));
+
+    // Measure time
+    unsigned long startTime = micros();
+    bool inside = pointInPolygon(numPoints, testPolygon, testX, testY);
+    unsigned long endTime = micros();
+
+    // Print timing and results
+    Serial.print(F("Random test #"));
+    Serial.print(t);
+    Serial.print(F(" -> Point is "));
+    Serial.println(inside ? F("INSIDE") : F("OUTSIDE"));
+    
+    unsigned long totalTime = endTime - startTime;
+    Serial.print(F("Execution time (microseconds): "));
+    Serial.println(totalTime);
+    Serial.println();
+
+    // Clean up
+    delete[] testPolygon;
+  }
+
+  Serial.println(F("Ending testPointInPolygon\n"));
+}
 void setup() {
   Serial.begin(115200);
   arduboy.begin();
+  delay(2000);
+  testFixedPointInPolygon();
+  while(true){
+      arduboy.pollButtons();
+      if(arduboy.buttonsState()){
+          break;
+      }
+  }
   arduboy.setFrameRate(FRAME_RATE);
   //Add a start screen instead of this delay so I can use a button presss randomness to seed random.
   //This allows for random in both simular and hardware 
