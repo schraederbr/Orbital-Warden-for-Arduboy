@@ -20,8 +20,8 @@ void testFixedPointInPolygon() {
     // Fill the polygon with random integer coordinates, then construct fixed-point
     // FP can handle approximately ±127.0 for the integer portion
     for (int i = 0; i < numPoints; i++) {
-      int16_t rx = random(-50, 51); // in the range [-50..50]
-      int16_t ry = random(-50, 51);
+      int16_t rx = random(0, 512); // in the range [-50..50]
+      int16_t ry = random(0, 512);
       testPolygon[i].x = FP(rx);
       testPolygon[i].y = FP(ry);
     }
@@ -91,8 +91,8 @@ void testPointInPolygon() {
     // Fill the polygon with random coordinates
     // Adjust range as appropriate for your project
     for (int i = 0; i < numPoints; i++) {
-      testPolygon[i].x = random(-50, 51);  // e.g. [-50..50]
-      testPolygon[i].y = random(-50, 51);  // e.g. [-50..50]
+      testPolygon[i].x = random(0, 512);  // e.g. [-50..50]
+      testPolygon[i].y = random(0, 512);  // e.g. [-50..50]
     }
 
     // Print the random polygon
@@ -109,8 +109,8 @@ void testPointInPolygon() {
     }
 
     // Generate a random test point
-    float testX = (float)random(-50, 51);
-    float testY = (float)random(-50, 51);
+    float testX = (float)random(0, 512);
+    float testY = (float)random(0, 512);
 
     Serial.print(F("Test point for polygon #"));
     Serial.print(t);
