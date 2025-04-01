@@ -11,8 +11,8 @@
 //   bool inside = false;
 //   // The planet is defined by circle_points.
 //   // Each point in circle_points is relative to (0,0); the actual world position is offset by worldCenterX/Y.
-//   int j = circle_num_points - 1;
-//   for (int i = 0; i < circle_num_points; i++) {
+//   int j = CIRCLE_NUM_POINTS - 1;
+//   for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
 //     float xi = circle_points[i].x + worldCenterX;
 //     float yi = circle_points[i].y + worldCenterY;
 //     float xj = circle_points[j].x + worldCenterX;
