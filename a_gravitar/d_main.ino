@@ -143,7 +143,7 @@ void testPointInPolygon() {
   Serial.println(F("Ending testPointInPolygon\n"));
 }
 void setup() {
-  Serial.begin(115200);
+  // Serial.begin(115200);
   arduboy.begin();
   delay(2000);
   testFixedPointInPolygon();

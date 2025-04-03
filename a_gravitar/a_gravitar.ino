@@ -268,7 +268,7 @@ bool isWithinDistance(float x1, float y1, float x2, float y2, float distance) {
 
 // pointInPolygon using fixed-point arithmetic
 bool fixedPointInPolygon(int numPoints, const FixedPoint2D points[], FP px, FP py) {
-  Serial.println(F("Entering pointInPolygon (fixed-point)"));
+  // Serial.println(F("Entering pointInPolygon (fixed-point)"));
 
   bool inside = false;
 
@@ -325,18 +325,18 @@ bool fixedPointInPolygon(int numPoints, const FixedPoint2D points[], FP px, FP p
 
 // The pointInPolygon function with serial prints at each major step
 bool pointInPolygon(int numPoints, const Point2D points[], float px, float py) {
-  Serial.println(F("Entering pointInPolygon"));
+  // Serial.println(F("Entering pointInPolygon"));
 
   bool inside = false;
   int pxInt = (int)px;
   int pyInt = (int)py;
 
   // Print the point we are checking
-  Serial.print(F("  Checking point ("));
-  Serial.print(pxInt);
-  Serial.print(F(", "));
-  Serial.print(pyInt);
-  Serial.println(F(")"));
+  // Serial.print(F("  Checking point ("));
+  // Serial.print(pxInt);
+  // Serial.print(F(", "));
+  // Serial.print(pyInt);
+  // Serial.println(F(")"));
 
   int j = numPoints - 1;
   for (int i = 0; i < numPoints; i++) {
@@ -345,15 +345,15 @@ bool pointInPolygon(int numPoints, const Point2D points[], float px, float py) {
     int xj = (int)points[j].x + worldCenterX;
     int yj = (int)points[j].y + worldCenterY;
 
-    Serial.print(F("  Edge from ("));
-    Serial.print(xi);
-    Serial.print(F(", "));
-    Serial.print(yi);
-    Serial.print(F(") to ("));
-    Serial.print(xj);
-    Serial.print(F(", "));
-    Serial.print(yj);
-    Serial.println(F(")"));
+    // Serial.print(F("  Edge from ("));
+    // Serial.print(xi);
+    // Serial.print(F(", "));
+    // Serial.print(yi);
+    // Serial.print(F(") to ("));
+    // Serial.print(xj);
+    // Serial.print(F(", "));
+    // Serial.print(yj);
+    // Serial.println(F(")"));
 
     // Check if the ray crosses the edge
     bool crosses = ((yi > pyInt) != (yj > pyInt)) &&
@@ -361,15 +361,15 @@ bool pointInPolygon(int numPoints, const Point2D points[], float px, float py) {
 
     if (crosses) {
       inside = !inside;
-      Serial.print(F("    Ray crosses edge, toggling inside -> "));
-      Serial.println(inside ? F("true") : F("false"));
+      // Serial.print(F("    Ray crosses edge, toggling inside -> "));
+      // Serial.println(inside ? F("true") : F("false"));
     }
 
     j = i;
   }
 
-  Serial.print(F("Leaving pointInPolygon, final inside = "));
-  Serial.println(inside ? F("true") : F("false"));
+  // Serial.print(F("Leaving pointInPolygon, final inside = "));
+  // Serial.println(inside ? F("true") : F("false"));
   return inside;
 }
 
