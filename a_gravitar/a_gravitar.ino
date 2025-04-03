@@ -1,10 +1,10 @@
 #include <Arduboy2.h>
 #include <math.h>
-#include "Font3x5.h"
+
 #include <FixedPoints.h>
 #include <FixedPointsCommon.h>
 Arduboy2 arduboy;
-Font3x5 font3x5 = Font3x5();
+
 //This probably uses 32 bit math so we might as well boost it up
 using FP = SFixed<11,20>;
 
@@ -16,8 +16,8 @@ int frames_alive = 0;
 // -----------------------
 const int screenWidth  = 128;
 const int screenHeight = 64;
-const int planetMinRadius = 40;
-const int planetMaxRadius = 150;
+const FP planetMinRadius = 100;
+const FP planetMaxRadius = 105;
 const int planetStepAngle = 25;
 
 const int worldWidth  = 512;
@@ -28,8 +28,8 @@ const int worldCenterX = worldWidth  / 2;
 const int worldCenterY = worldHeight / 2; 
 
 // Camera variables (centered on the ship)
-float cameraX = 0;
-float cameraY = 0;
+FP cameraX = 0;
+FP cameraY = 0;
 
 const int TURRET_ACTIVE_DISTANCE = 60;
 const int TURRET_SCORE = 250;
@@ -44,24 +44,24 @@ const int THRUST_FUEL_BURN_RATE = 1000; //per second when thrusting
 const int TRACTOR_FUEL_BURN_RATE = 2000; //extra fuel burned per second when tractor beam is active
 int currentFuel = DEFAULT_FUEL;
 int score = 0;
-float startX = worldWidth / 2;
-float startY = 256 - (planetMaxRadius + 10);  
-float shipX, shipY;  // Position of the ship in "world" coordinates
-float shipAngle;      // Ship’s facing angle in radians
-float velX, velY;     // Velocity
+FP startX = worldWidth / 2;
+FP startY = 256 - (planetMaxRadius + 10);  
+FP shipX, shipY;  // Position of the ship in "world" coordinates
+FP shipAngle;      // Ship’s facing angle in radians
+FP velX, velY;     // Velocity
 
-const float ACCELERATION   = 0.02f;  // How fast the ship accelerates
-const float ROTATION_SPEED = 0.1f;  // Radians/frame rotation
-const float FRICTION       = 0.997f; // Slows the ship gradually
-const float GRAVITY_ACCEL = 0.005f;  // Adjust this constant to change gravity strength.
+const FP ACCELERATION   = 0.02f;  // How fast the ship accelerates
+const FP ROTATION_SPEED = 0.1f;  // Radians/frame rotation
+const FP FRICTION       = 0.997f; // Slows the ship gradually
+const FP GRAVITY_ACCEL = 0.005f;  // Adjust this constant to change gravity strength.
 
 
-const float turretWidth = 3.0;
-const float turretHeight = 6.0;
+const FP turretWidth = 3.0;
+const FP turretHeight = 6.0;
 struct FuelPickup {
-    float x;
-    float y;
-    float angle;
+    FP x;
+    FP y;
+    FP angle;
     int fuelAmount = FUEL_PER_PICKUP;
 };
 
@@ -71,8 +71,8 @@ int pickupCount = 0;
 // Circle / Background
 // -----------------------
 struct Point2D {
-  float x;
-  float y;
+  FP x;
+  FP y;
 };
 
 
@@ -84,9 +84,9 @@ struct FixedPoint2D {
 };
 
 struct Turret {
-  float x;
-  float y;
-  float angle;
+  FP x;
+  FP y;
+  FP angle;
   int   fireTimer;  // counts down; when <= 0, shoot
   //Points for each corner
   Point2D p1;
@@ -106,10 +106,10 @@ bool gameOver = false;
 // Simple bullet structure
 struct Bullet {
   bool active;  // Is this bullet slot in use?
-  float x;      // World position
-  float y;      // World position
-  float vx;     // Velocity X
-  float vy;     // Velocity Y
+  FP x;      // World position
+  FP y;      // World position
+  FP vx;     // Velocity X
+  FP vy;     // Velocity Y
   int framesAlive = 0;
 };
 
@@ -133,13 +133,15 @@ int turretCount = 0;
 
 // Maximum number of on-screen bullets
 static const int MAX_BULLETS = 5;
-static const float MAX_BULLET_FRAMES_ALIVE = 120;
+static const FP MAX_BULLET_FRAMES_ALIVE = 120;
 
 
 // The global array of bullets
 Bullet bullets[MAX_BULLETS];
 
-void spawnBullet(float x, float y, float angle) {
+
+//May want to benchmark if slowing down whether the spawnBullet or spawnTurretBulletMethod is better
+void spawnBullet(FP x, FP y, FP angle) {
   // Look for an inactive bullet slot
   for (int i = 0; i < MAX_BULLETS; i++) {
     if (!bullets[i].active) {
@@ -153,8 +155,8 @@ void spawnBullet(float x, float y, float angle) {
 
       // We want bullet direction to match the ship’s facing
       // Remember your code does "shipAngle = 0 => up," so we use (angle - PI/2)
-      bullets[i].vx = cos(angle - PI / 2) * bulletSpeed;
-      bullets[i].vy = sin(angle - PI / 2) * bulletSpeed;
+      bullets[i].vx = (FP)(cos((float)angle - PI / 2) * bulletSpeed);
+      bullets[i].vy = (FP)(sin((float)angle - PI / 2) * bulletSpeed);
 
       // Stop after spawning 1 bullet
       break;
@@ -163,7 +165,7 @@ void spawnBullet(float x, float y, float angle) {
 }
 
 
-void spawnTurretBullet(float x, float y, float targetX, float targetY) {
+void spawnTurretBullet(FP x, FP y, FP targetX, FP targetY) {
   //Do short delay so player doesn't get immediately shot
   if(frames_alive > TURRET_START_DELAY){
     // Find an inactive slot
@@ -176,14 +178,14 @@ void spawnTurretBullet(float x, float y, float targetX, float targetY) {
         turretBullets[i].y = y;
 
         // Aim at (targetX, targetY)
-        float dx = targetX - x;
-        float dy = targetY - y;
-        float length = sqrt(dx*dx + dy*dy);
+        FP dx = targetX - x;
+        FP dy = targetY - y;
+        FP length = (FP)sqrt((float)(dx*dx + dy*dy));
         if (length < 0.001f) {
           length = 0.001f; // avoid divide by zero
         }
 
-        float speed = 0.5f; // adjust bullet speed as desired
+        FP speed = 0.5f; // adjust bullet speed as desired
         turretBullets[i].vx = (dx / length) * speed;
         turretBullets[i].vy = (dy / length) * speed;
 
@@ -198,42 +200,85 @@ void spawnTurretBullet(float x, float y, float targetX, float targetY) {
 
 
 // Returns a random float in [min_val, max_val].
-float randomFloat(float min_val, float max_val) {
-  return min_val + (max_val - min_val) * (random(0, 10001) / 10000.0f);
+// FP randomFloat(float min_val, float max_val) {
+//   return (FP)(min_val + (max_val - min_val) * (random(0, 10001) / 10000.0f));
+// }
+
+FP randomFixed(FP min_val, FP max_val) {
+  // Get a random integer from 0 to 10000
+  int32_t r = random(0, 10001);
+
+  // Convert to fixed point by dividing by 10000
+  FP fraction = FP(r) / FP(10000);
+
+  // Return min_val + (max_val - min_val) * fraction
+  return min_val + (max_val - min_val) * fraction;
 }
 
+// Point2D randomPointOnLine(const Point2D& p0, const Point2D& p1) {
+//     // Generate a random t in [0,1]. On Arduino, random(max) returns a long in [0, max).
+//     // Adjust the range to get a floating-point number in [0,1].
+//     float t = static_cast<float>(random(10000)) / 10000.0f;
+
+//     // Linearly interpolate
+//     Point2D result;
+//     result.x = p0.x + t * (p1.x - p0.x);
+//     result.y = p0.y + t * (p1.y - p0.y);
+
+//     return result;
+// }
+
+//Double check this fixed point version works
 Point2D randomPointOnLine(const Point2D& p0, const Point2D& p1) {
-    // Generate a random t in [0,1]. On Arduino, random(max) returns a long in [0, max).
-    // Adjust the range to get a floating-point number in [0,1].
-    float t = static_cast<float>(random(10000)) / 10000.0f;
+  // Generate a random fixed-point t in [0, 1]
+  int32_t r = random(0, 10001);
+  FP t = FP(r) / FP(10000);
 
-    // Linearly interpolate
-    Point2D result;
-    result.x = p0.x + t * (p1.x - p0.x);
-    result.y = p0.y + t * (p1.y - p0.y);
+  // Linear interpolation
+  Point2D result;
+  result.x = p0.x + (p1.x - p0.x) * t;
+  result.y = p0.y + (p1.y - p0.y) * t;
 
-    return result;
+  return result;
 }
 
-bool pointInTriangle(float px, float py, float x1, float y1, float x2, float y2, float x3, float y3) {
-    // Compute the area of the triangle using the determinant formula
-    float denominator = ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+// bool pointInTriangle(float px, float py, float x1, float y1, float x2, float y2, float x3, float y3) {
+//     // Compute the area of the triangle using the determinant formula
+//     float denominator = ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
 
-    // Avoid division by zero (if the triangle is degenerate)
-    if (denominator == 0.0) return false;
+//     // Avoid division by zero (if the triangle is degenerate)
+//     if (denominator == 0.0) return false;
 
-    // Compute barycentric coordinates
-    float alpha = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3)) / denominator;
-    float beta  = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3)) / denominator;
-    float gamma = 1.0 - alpha - beta;
+//     // Compute barycentric coordinates
+//     float alpha = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3)) / denominator;
+//     float beta  = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3)) / denominator;
+//     float gamma = 1.0 - alpha - beta;
 
-    // Check if the point is inside the triangle (all barycentric coordinates between 0 and 1)
-    return (alpha >= 0.0 && alpha <= 1.0) && 
-           (beta  >= 0.0 && beta  <= 1.0) && 
-           (gamma >= 0.0 && gamma <= 1.0);
+//     // Check if the point is inside the triangle (all barycentric coordinates between 0 and 1)
+//     return (alpha >= 0.0 && alpha <= 1.0) && 
+//            (beta  >= 0.0 && beta  <= 1.0) && 
+//            (gamma >= 0.0 && gamma <= 1.0);
+// }
+
+bool pointInTriangle(FP px, FP py, FP x1, FP y1, FP x2, FP y2, FP x3, FP y3) {
+  // Compute the area of the triangle using the determinant formula
+  FP denominator = ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+
+  // Avoid division by zero (if the triangle is degenerate)
+  if (denominator == FP(0)) return false;
+
+  // Compute barycentric coordinates
+  FP alpha = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3)) / denominator;
+  FP beta  = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3)) / denominator;
+  FP gamma = FP(1) - alpha - beta;
+
+  // Check if the point is inside the triangle (all barycentric coordinates between 0 and 1)
+  return (alpha >= FP(0) && alpha <= FP(1)) && 
+         (beta  >= FP(0) && beta  <= FP(1)) && 
+         (gamma >= FP(0) && gamma <= FP(1));
 }
 
-bool pointInRectangle(float px, float py, Turret* turret){
+bool pointInRectangle(FP px, FP py, Turret* turret){
   return pointInRectangle(px, py, 
                           turret->p1.x, turret->p1.y, 
                           turret->p2.x, turret->p2.y, 
@@ -241,11 +286,11 @@ bool pointInRectangle(float px, float py, Turret* turret){
                           turret->p4.x, turret->p4.y);
 }
 bool pointInRectangle(
-    float px, float py,
-    float x1, float y1,
-    float x2, float y2,
-    float x3, float y3,
-    float x4, float y4)
+    FP px, FP py,
+    FP x1, FP y1,
+    FP x2, FP y2,
+    FP x3, FP y3,
+    FP x4, FP y4)
 {
     // Check if point is in the triangle (x1,y1), (x2,y2), (x3,y3)
     bool inFirstTriangle = pointInTriangle(px, py, x1, y1, x2, y2, x3, y3);
@@ -256,13 +301,13 @@ bool pointInRectangle(
     return (inFirstTriangle || inSecondTriangle);
 }
 
-float getDistanceSquared(float x1, float y1, float x2, float y2) {
-    float dx = x2 - x1;
-    float dy = y2 - y1;
+FP getDistanceSquared(FP x1, FP y1, FP x2, FP y2) {
+    FP dx = x2 - x1;
+    FP dy = y2 - y1;
     return dx * dx + dy * dy;
 }
 
-bool isWithinDistance(float x1, float y1, float x2, float y2, float distance) {
+bool isWithinDistance(FP x1, FP y1, FP x2, FP y2, FP distance) {
     return getDistanceSquared(x1, y1, x2, y2) <= distance * distance;
 }
 
@@ -324,7 +369,7 @@ bool fixedPointInPolygon(int numPoints, const FixedPoint2D points[], FP px, FP p
 
 
 // The pointInPolygon function with serial prints at each major step
-bool pointInPolygon(int numPoints, const Point2D points[], float px, float py) {
+bool pointInPolygon(int numPoints, const Point2D points[], FP px, FP py) {
   // Serial.println(F("Entering pointInPolygon"));
 
   bool inside = false;

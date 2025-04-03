@@ -10,15 +10,15 @@
 // -------------------------
 static const int NUM_STARS = 1; // how many stars you want
 struct Star {
-  float x;
-  float y;
+  FP x;
+  FP y;
   int   size;  // 1..3, for example
 };
 Star stars[NUM_STARS];
 int starCount = 0;
 
 // We pick a parallax factor < 1. If we use 0.5f, the stars move at half speed.
-const float STAR_PARALLAX = 0.5f;
+const FP STAR_PARALLAX = 0.5f;
 
 void generateStars() {
   // Create the full set of stars.
@@ -39,9 +39,9 @@ void generateStars() {
 void cullStarsInsidePlanet() {
   int j = 0;  // index for "kept" stars
   for (int i = 0; i < starCount; i++) {
-    float dx = stars[i].x - worldCenterX;
-    float dy = stars[i].y - worldCenterY;
-    float distSq = dx * dx + dy * dy;
+    FP dx = stars[i].x - worldCenterX;
+    FP dy = stars[i].y - worldCenterY;
+    FP distSq = dx * dx + dy * dy;
 
     // If this star is OUTSIDE the planet's bounding circle, keep it.
     // If it's inside, skip it.
@@ -60,8 +60,8 @@ void cullStarsInsidePlanet() {
 void drawStars() {
   for (int i = 0; i < NUM_STARS; i++) {
     // starX, starY in world coordinates
-    float starX = stars[i].x;
-    float starY = stars[i].y;
+    FP starX = stars[i].x;
+    FP starY = stars[i].y;
     int   starSize = stars[i].size;
 
     // ---------------------------
@@ -148,8 +148,8 @@ void drawPlayerBullets(){
   for (int i = 0; i < MAX_BULLETS; i++) {
     if (bullets[i].active) {
       // Convert bullet position from world coords to screen coords
-      float bx = bullets[i].x - cameraX;
-      float by = bullets[i].y - cameraY;
+      FP bx = bullets[i].x - cameraX;
+      FP by = bullets[i].y - cameraY;
       // Draw a pixel or small circle for the bullet
       // arduboy.drawPixel((int)bx, (int)by, WHITE);
       arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
@@ -161,8 +161,8 @@ void drawPlayerBullets(){
 void drawTurretBullets() {
   for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
     if (turretBullets[i].active) {
-      float bx = turretBullets[i].x - cameraX;
-      float by = turretBullets[i].y - cameraY;
+      FP bx = turretBullets[i].x - cameraX;
+      FP by = turretBullets[i].y - cameraY;
       // Draw as a small dot
       // arduboy.drawPixel((int)bx, (int)by, WHITE);
       arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
@@ -257,7 +257,7 @@ void fillPolygonHorizontal(const int *px, const int *py, int n) {
   }
 }
 
-void drawTurret(Turret* turret, float screenX, float screenY){
+void drawTurret(Turret* turret, FP screenX, FP screenY){
 
   int ix1 = (int)(screenX + turret->p1.x - turret->x);
   int iy1 = (int)(screenY + turret->p1.y - turret->y);
@@ -275,10 +275,10 @@ void drawTurret(Turret* turret, float screenX, float screenY){
   arduboy.drawLine(ix4, iy4, ix1, iy1, WHITE);
 }
 
-void setTurretCorners(Turret* turret, float screenX, float screenY, float width, float height){
+void setTurretCorners(Turret* turret, FP screenX, FP screenY, FP width, FP height){
   // Half dimensions so the rectangle is centered at (0, 0) before translation
-  float halfW = width * 0.5;
-  float halfH = height * 0.5;
+  FP halfW = width * 0.5;
+  FP halfH = height * 0.5;
 
   // Rectangle corners relative to center
   // We'll define them in a clockwise (or counter-clockwise) order
@@ -286,30 +286,35 @@ void setTurretCorners(Turret* turret, float screenX, float screenY, float width,
   //Use this if you want the turret to be smaller on the top, similar to the turret shape in gravitar
   //float x1 = -halfW/2;  float y1 = -halfH;  // top-left
   // float x2 =  halfW/2;  float y2 = -halfH;  // top-right
-  float x1 = -halfW;  float y1 = -halfH;  // top-left
-  float x2 =  halfW;  float y2 = -halfH;  // top-right
-  float x3 =  halfW;  float y3 =  halfH;  // bottom-right
-  float x4 = -halfW;  float y4 =  halfH;  // bottom-left
+  FP x1 = -halfW;  FP y1 = -halfH;  // top-left
+  FP x2 =  halfW;  FP y2 = -halfH;  // top-right
+  FP x3 =  halfW;  FP y3 =  halfH;  // bottom-right
+  FP x4 = -halfW;  FP y4 =  halfH;  // bottom-left
   
   // Precompute sine and cosine of the angle
-  float cosA = cos(turret->angle);
-  float sinA = sin(turret->angle);
+  FP cosA = (FP)cos((float)turret->angle);
+  FP sinA = (FP)sin((float)turret->angle);
 
   // Rotate each corner
-  float rx1 = x1 * cosA - y1 * sinA;
-  float ry1 = x1 * sinA + y1 * cosA;
+  FP rx1 = x1 * cosA - y1 * sinA;
+  FP ry1 = x1 * sinA + y1 * cosA;
 
-  float rx2 = x2 * cosA - y2 * sinA;
-  float ry2 = x2 * sinA + y2 * cosA;
+  FP rx2 = x2 * cosA - y2 * sinA;
+  FP ry2 = x2 * sinA + y2 * cosA;
 
-  float rx3 = x3 * cosA - y3 * sinA;
-  float ry3 = x3 * sinA + y3 * cosA;
+  FP rx3 = x3 * cosA - y3 * sinA;
+  FP ry3 = x3 * sinA + y3 * cosA;
 
-  float rx4 = x4 * cosA - y4 * sinA;
-  float ry4 = x4 * sinA + y4 * cosA;
+  FP rx4 = x4 * cosA - y4 * sinA;
+  FP ry4 = x4 * sinA + y4 * cosA;
 
-  float offsetX =  (0.0f) * cos(turret->angle) - (-halfH) * sin(turret->angle);
-  float offsetY =  (0.0f) * sin(turret->angle) + (-halfH) * cos(turret->angle);
+  float angleF = float(turret->angle);
+  float c = cos(angleF);
+  float s = sin(angleF);
+  
+  // Then combine results back into FP if you want offsetX/offsetY in FP:
+  FP offsetX = FP( (0.0f) * c - (float)(-halfH) * s );
+  FP offsetY = FP( (0.0f) * s + (float)(-halfH) * c );
 
   turret->x = turret->x + offsetX;
   turret->y = turret->y + offsetY;
@@ -339,35 +344,35 @@ void setTurretCorners(Turret* turret, float screenX, float screenY, float width,
 //My coordinates may be off
 // I should try drawing an unrotated square first
 // Draws a rotated rectangle of given width & height, centered at (screenX, screenY), at the specified angle.
-void drawRotatedRect(float screenX, float screenY, float width, float height, float angle)
+void drawRotatedRect(FP screenX, FP screenY, FP width, FP height, FP angle)
 {
   // Half dimensions so the rectangle is centered at (0, 0) before translation
-  float halfW = width * 0.5;
-  float halfH = height * 0.5;
+  FP halfW = width * 0.5;
+  FP halfH = height * 0.5;
 
   // Rectangle corners relative to center
   // We'll define them in a clockwise (or counter-clockwise) order
-  float x1 = -halfW;  float y1 = -halfH;  // top-left
-  float x2 =  halfW;  float y2 = -halfH;  // top-right
-  float x3 =  halfW;  float y3 =  halfH;  // bottom-right
-  float x4 = -halfW;  float y4 =  halfH;  // bottom-left
+  FP x1 = -halfW;  FP y1 = -halfH;  // top-left
+  FP x2 =  halfW;  FP y2 = -halfH;  // top-right
+  FP x3 =  halfW;  FP y3 =  halfH;  // bottom-right
+  FP x4 = -halfW;  FP y4 =  halfH;  // bottom-left
 
   // Precompute sine and cosine of the angle
-  float cosA = cos(angle);
-  float sinA = sin(angle);
+  FP cosA = (FP)cos((float)angle);
+  FP sinA = (FP)sin((float)angle);
 
   // Rotate each corner
-  float rx1 = x1 * cosA - y1 * sinA;
-  float ry1 = x1 * sinA + y1 * cosA;
+  FP rx1 = x1 * cosA - y1 * sinA;
+  FP ry1 = x1 * sinA + y1 * cosA;
 
-  float rx2 = x2 * cosA - y2 * sinA;
-  float ry2 = x2 * sinA + y2 * cosA;
+  FP rx2 = x2 * cosA - y2 * sinA;
+  FP ry2 = x2 * sinA + y2 * cosA;
 
-  float rx3 = x3 * cosA - y3 * sinA;
-  float ry3 = x3 * sinA + y3 * cosA;
+  FP rx3 = x3 * cosA - y3 * sinA;
+  FP ry3 = x3 * sinA + y3 * cosA;
 
-  float rx4 = x4 * cosA - y4 * sinA;
-  float ry4 = x4 * sinA + y4 * cosA;
+  FP rx4 = x4 * cosA - y4 * sinA;
+  FP ry4 = x4 * sinA + y4 * cosA;
 
   // Translate to the screen position
   int ix1 = (int)(screenX + rx1);
@@ -387,17 +392,34 @@ void drawRotatedRect(float screenX, float screenY, float width, float height, fl
 }
 
 // Creates a random point at a given angle and distance from the center.
-Point2D randomPointAtAngle(float angle_deg, float min_distance, float max_distance) {
-  float angle_rad = angle_deg * (PI / 180.0f);
-  float distance  = randomFloat(min_distance, max_distance);
+// Point2D randomPointAtAngle(FP angle_deg, FP min_distance, FP max_distance) {
+//   float angle_rad = (float)angle_deg * (PI / 180.0f);
+//   FP distance  = randomFixed(min_distance, max_distance);
+//   Point2D pt;
+//   pt.x = (FP)(distance * cos(angle_rad));
+//   pt.y = (FP)(distance * sin(angle_rad));
+//   return pt;
+// }
+
+Point2D randomPointAtAngle(FP angle_deg, FP min_distance, FP max_distance) {
+  // Convert angle from fixed-point degrees to radians as float
+  float angle_rad = float(angle_deg) * (PI / 180.0f);
+
+  // Get random distance in fixed-point
+  FP distance = randomFixed(min_distance, max_distance);
+
+  // Compute x and y as float, then convert to FP
+  float x = float(distance) * cos(angle_rad);
+  float y = float(distance) * sin(angle_rad);
+
   Point2D pt;
-  pt.x = distance * cos(angle_rad);
-  pt.y = distance * sin(angle_rad);
+  pt.x = FP(x);
+  pt.y = FP(y);
   return pt;
 }
 
 // Generates an array of slightly irregular points forming a "random circle."
-void randomCircle(int angle_step, float min_distance, float max_distance) {
+void randomCircle(int angle_step, FP min_distance, FP max_distance) {
   // We still produce approximately (360 / angle_step) points:
   // Point2D* points = new Point2D[circle_num_points];
 
@@ -406,8 +428,8 @@ void randomCircle(int angle_step, float min_distance, float max_distance) {
     int baseAngle = i * angle_step;
 
     // Add a small random offset in the range [-5..5]
-    int offset = random(-5, 6); // random(a, b) goes [a..(b-1)]
-    int angle = baseAngle + offset;
+    // int offset = random(-5, 6); // random(a, b) goes [a..(b-1)]
+    int angle = baseAngle;
 
     // Clamp angle to [0..359] just in case
     if (angle < 0) {
@@ -420,8 +442,8 @@ void randomCircle(int angle_step, float min_distance, float max_distance) {
     Point2D pt = randomPointAtAngle(angle, min_distance, max_distance);
 
     // Optionally add a small x/y offset
-    pt.x += randomFloat(-2.0f, 2.0f);
-    pt.y += randomFloat(-2.0f, 2.0f);
+    // pt.x += randomFixed((FP)-2, (FP)2);
+    // pt.y += randomFixed((FP)-2, (FP)2);
 
     circle_points[i] = pt;
     // if(i == 0){
@@ -433,112 +455,228 @@ void randomCircle(int angle_step, float min_distance, float max_distance) {
     // }
   }
   // 1. Compute centroid
-  float sumX = 0;
-  float sumY = 0;
+  FP sumX = 0;
+  FP sumY = 0;
   for (int i = 0; i < circle_num_points; i++) {
     sumX += circle_points[i].x;
     sumY += circle_points[i].y;
   }
-  circleCenterX = (int)(float(sumX) / circle_num_points);
-  circleCenterY = (int)(float(sumY) / circle_num_points);
+  circleCenterX = (int)(FP(sumX) / circle_num_points);
+  circleCenterY = (int)(FP(sumY) / circle_num_points);
 
 
 }
+
+// void generateFuelPickups(int numFuelPickups){
+//     pickupCount = 0;
+//     for (int i = 0; i < numFuelPickups; i++) {
+//         int pickupIndex = random(0, circle_num_points);
+//         Point2D p1 = circle_points[pickupIndex];
+//         Point2D p2 = circle_points[(pickupIndex + 1) % circle_num_points];
+
+//         float dx = (float)(p2.x - p1.x);
+//         float dy = (float)(p2.y - p1.y);
+//         float edgeAngle = atan2(dy, dx);
+//         float pickupAngle = edgeAngle + PI / 2.0;
+
+//         Point2D pickupOffset = randomPointOnLine((FP)p1, (FP)p2);
+//         FP worldX = worldCenterX + pickupOffset.x;
+//         FP worldY = worldCenterY + pickupOffset.y;
+
+//         fuelPickups[pickupCount].x = worldX;
+//         fuelPickups[pickupCount].y = worldY;
+//         fuelPickups[pickupCount].angle = pickupAngle;
+//         pickupCount++;
+//     }
+// }
 
 void generateFuelPickups(int numFuelPickups){
-    pickupCount = 0;
-    for (int i = 0; i < numFuelPickups; i++) {
-        int pickupIndex = random(0, circle_num_points);
-        Point2D p1 = circle_points[pickupIndex];
-        Point2D p2 = circle_points[(pickupIndex + 1) % circle_num_points];
+  pickupCount = 0;
+  for (int i = 0; i < numFuelPickups; i++) {
+      int pickupIndex = random(0, circle_num_points);
+      const Point2D& p1 = circle_points[pickupIndex];
+      const Point2D& p2 = circle_points[(pickupIndex + 1) % circle_num_points];
 
-        float dx = p2.x - p1.x;
-        float dy = p2.y - p1.y;
-        float edgeAngle = atan2(dy, dx);
-        float pickupAngle = edgeAngle + PI / 2.0;
+      // Convert FP to float for angle calculation
+      float dx = float(p2.x - p1.x);
+      float dy = float(p2.y - p1.y);
+      float edgeAngle = atan2(dy, dx);
+      float pickupAngle = edgeAngle + PI / 2.0f;
 
-        Point2D pickupOffset = randomPointOnLine(p1, p2);
-        float worldX = worldCenterX + pickupOffset.x;
-        float worldY = worldCenterY + pickupOffset.y;
+      // Get a random point along the edge
+      Point2D pickupOffset = randomPointOnLine(p1, p2);
 
-        fuelPickups[pickupCount].x = worldX;
-        fuelPickups[pickupCount].y = worldY;
-        fuelPickups[pickupCount].angle = pickupAngle;
-        pickupCount++;
-    }
+      // Add world center offset
+      FP worldX = worldCenterX + pickupOffset.x;
+      FP worldY = worldCenterY + pickupOffset.y;
+
+      // Store pickup
+      fuelPickups[pickupCount].x = worldX;
+      fuelPickups[pickupCount].y = worldY;
+      fuelPickups[pickupCount].angle = (FP)pickupAngle;
+      pickupCount++;
+  }
 }
+
+// void generateTurrets(int numTurrets) {
+//   turretCount = 0;
+//   for (int i = 0; i < numTurrets; i++) {
+//     int turretIndex = random(0, circle_num_points);
+//     Point2D p1 = circle_points[turretIndex];
+//     Point2D p2 = circle_points[(turretIndex + 1) % circle_num_points];
+
+//     float dx = p2.x - p1.x;
+//     float dy = p2.y - p1.y;
+//     float edgeAngle = atan2(dy, dx);
+//     float turretAngle = edgeAngle;
+
+//     Point2D turretOffset = randomPointOnLine(p1, p2);
+//     float worldX = worldCenterX + turretOffset.x;
+//     float worldY = worldCenterY + turretOffset.y;
+
+//     turrets[turretCount].x = worldX;
+//     turrets[turretCount].y = worldY;
+//     turrets[turretCount].angle = turretAngle;
+//     // Start the turret’s timer so they don’t all fire at once
+//     turrets[turretCount].fireTimer = random(0, TURRET_FIRE_DELAY);
+//     turretCount++;
+//   }
+//   for (int i = 0; i < turretCount; i++) {
+//     float pivotX = turrets[i].x - cameraX; // pivot = planet perimeter
+//     float pivotY = turrets[i].y - cameraY;
+//     float angle  = turrets[i].angle;       // tangent + π/2 (or however you computed)
+
+//     setTurretCorners(&turrets[i], pivotX, pivotY, turretWidth, turretHeight);
+//   }
+
+//   // Also init all turret bullets as inactive
+//   for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
+//     turretBullets[i].active = false;
+//   }
+
+// }
 
 void generateTurrets(int numTurrets) {
   turretCount = 0;
+
   for (int i = 0; i < numTurrets; i++) {
-    int turretIndex = random(0, circle_num_points);
-    Point2D p1 = circle_points[turretIndex];
-    Point2D p2 = circle_points[(turretIndex + 1) % circle_num_points];
+      // 1) Pick two adjacent points on your circle
+      int turretIndex = random(0, circle_num_points);
+      const Point2D& p1 = circle_points[turretIndex];
+      const Point2D& p2 = circle_points[(turretIndex + 1) % circle_num_points];
 
-    float dx = p2.x - p1.x;
-    float dy = p2.y - p1.y;
-    float edgeAngle = atan2(dy, dx);
-    float turretAngle = edgeAngle;
+      // 2) Convert FP to float to get the angle via atan2
+      float dx = float(p2.x - p1.x);
+      float dy = float(p2.y - p1.y);
+      float edgeAngle = atan2(dy, dx);
+      float turretAngle = edgeAngle;  // or add offsets if you like
 
-    Point2D turretOffset = randomPointOnLine(p1, p2);
-    float worldX = worldCenterX + turretOffset.x;
-    float worldY = worldCenterY + turretOffset.y;
+      // 3) Get a random point along the segment p1 -> p2 (in FP)
+      Point2D turretOffset = randomPointOnLine(p1, p2);
 
-    turrets[turretCount].x = worldX;
-    turrets[turretCount].y = worldY;
-    turrets[turretCount].angle = turretAngle;
-    // Start the turret’s timer so they don’t all fire at once
-    turrets[turretCount].fireTimer = random(0, TURRET_FIRE_DELAY);
-    turretCount++;
+      // 4) Convert to "world" coordinates (still in FP)
+      FP worldX = worldCenterX + turretOffset.x;
+      FP worldY = worldCenterY + turretOffset.y;
+
+      // 5) Assign to turrets[] 
+      //    - x,y are FP
+      //    - angle is float
+      turrets[turretCount].x = worldX;
+      turrets[turretCount].y = worldY;
+      turrets[turretCount].angle = turretAngle;
+
+      // 6) Initialize the turret’s firing timer randomly
+      turrets[turretCount].fireTimer = random(0, TURRET_FIRE_DELAY);
+      turretCount++;
   }
-  for (int i = 0; i < turretCount; i++) {
-    float pivotX = turrets[i].x - cameraX; // pivot = planet perimeter
-    float pivotY = turrets[i].y - cameraY;
-    float angle  = turrets[i].angle;       // tangent + π/2 (or however you computed)
 
-    setTurretCorners(&turrets[i], pivotX, pivotY, turretWidth, turretHeight);
+  // Second loop: set turret corners (probably for rendering or collision)
+  for (int i = 0; i < turretCount; i++) {
+      // pivotX, pivotY as float for setTurretCorners
+      float pivotX = float(turrets[i].x - cameraX);
+      float pivotY = float(turrets[i].y - cameraY);
+
+      // angle is already a float
+      float angle = (float)turrets[i].angle;
+
+      setTurretCorners(&turrets[i], pivotX, pivotY, turretWidth, turretHeight);
   }
 
   // Also init all turret bullets as inactive
   for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
-    turretBullets[i].active = false;
+      turretBullets[i].active = false;
   }
-
 }
 
-void drawAllFuelPickups(){
-    for (int i = 0; i < pickupCount; i++) {
-        float pivotX = fuelPickups[i].x - cameraX; // pivot = planet perimeter
-        float pivotY = fuelPickups[i].y - cameraY;
-        float angle  = fuelPickups[i].angle + PI/2;       // tangent + π/2 (or however you computed)
+// void drawAllFuelPickups(){
+//     for (int i = 0; i < pickupCount; i++) {
+//         float pivotX = fuelPickups[i].x - cameraX; // pivot = planet perimeter
+//         float pivotY = fuelPickups[i].y - cameraY;
+//         float angle  = fuelPickups[i].angle + PI/2;       // tangent + π/2 (or however you computed)
 
-        float pickupW = 4.0;  // or whatever size
-        float pickupH = 4.0;  // for example
+//         float pickupW = 4.0;  // or whatever size
+//         float pickupH = 4.0;  // for example
 
-        // Half-sizes
-        float halfW = pickupW * 0.5;
-        float halfH = pickupH * 0.5;
+//         // Half-sizes
+//         float halfW = pickupW * 0.5;
+//         float halfH = pickupH * 0.5;
 
-        // We want the rectangle's bottom edge at the pivot. 
-        // In local coords, that bottom edge = +halfH.
-        // So we shift the center by (0, -halfH) in local space, then rotate it.
-        float offsetX =  (0.0f) * cos(angle) - (-halfH) * sin(angle);
-        float offsetY =  (0.0f) * sin(angle) + (-halfH) * cos(angle);
+//         // We want the rectangle's bottom edge at the pivot. 
+//         // In local coords, that bottom edge = +halfH.
+//         // So we shift the center by (0, -halfH) in local space, then rotate it.
+//         float offsetX =  (0.0f) * cos(angle) - (-halfH) * sin(angle);
+//         float offsetY =  (0.0f) * sin(angle) + (-halfH) * cos(angle);
 
-        float centerX = pivotX + offsetX;
-        float centerY = pivotY + offsetY;
+//         float centerX = pivotX + offsetX;
+//         float centerY = pivotY + offsetY;
 
-        // Now draw the rectangle with its center at (centerX, centerY) and rotation = angle
-        drawRotatedRect(centerX, centerY, pickupW, pickupH, angle);
-    }
+//         // Now draw the rectangle with its center at (centerX, centerY) and rotation = angle
+//         drawRotatedRect(centerX, centerY, pickupW, pickupH, angle);
+//     }
+// }
+
+void drawAllFuelPickups() {
+  for (int i = 0; i < pickupCount; i++) {
+      // Convert fixed-point positions to float for rotation math
+      float pivotX = float(fuelPickups[i].x - cameraX);
+      float pivotY = float(fuelPickups[i].y - cameraY);
+
+      // If fuelPickups[i].angle is stored as float, just add PI/2:
+      // If it's stored as FP, then do: float angle = float(fuelPickups[i].angle) + float(M_PI / 2);
+      float angle  = (float)fuelPickups[i].angle + float(M_PI / 2);
+
+      // Example width/height
+      float pickupW = 4.0f;  
+      float pickupH = 4.0f;
+
+      float halfW = pickupW * 0.5f;
+      float halfH = pickupH * 0.5f;
+
+      // In local coords, the pickup's bottom edge is +halfH from the center,
+      // so we shift by (0, -halfH) and then rotate that vector.
+      float offsetX =  (0.0f)          * cos(angle) 
+                     - (-halfH)        * sin(angle);
+      float offsetY =  (0.0f)          * sin(angle) 
+                     + (-halfH)        * cos(angle);
+
+      float centerX = pivotX + offsetX;
+      float centerY = pivotY + offsetY;
+
+      // drawRotatedRect takes FP arguments, so cast from float to FP
+      drawRotatedRect(
+          FP(centerX),
+          FP(centerY),
+          FP(pickupW),
+          FP(pickupH),
+          FP(angle)
+      );
+  }
 }
-
-
 
 void drawAllTurrets() {
   for (int i = 0; i < turretCount; i++) {
-    float pivotX = turrets[i].x - cameraX; // pivot = planet perimeter
-    float pivotY = turrets[i].y - cameraY;
+    FP pivotX = turrets[i].x - cameraX; // pivot = planet perimeter
+    FP pivotY = turrets[i].y - cameraY;
     drawTurret(&turrets[i], pivotX, pivotY);
   }
 }
@@ -568,12 +706,29 @@ void drawPolygonLines(Point2D* points, int num_points, bool close_shape) {
 }
 
 //Use drawline instead of drawTriangle so you can skip one of the lines
-void drawRotatedTriangle(bool filled, int linesToDraw, float screenX, float screenY, float angle, int x1, int y1, int x2, int y2, int x3, int y3){
+void drawRotatedTriangle(
+  bool filled,
+  int linesToDraw,
+  FP screenX,
+  FP screenY,
+  FP angle,
+  int x1,
+  int y1,
+  int x2,
+  int y2,
+  int x3,
+  int y3
+) {
+  // 1) Convert fixed-point to float for trig
+  float sx = float(screenX);
+  float sy = float(screenY);
+  float a  = float(angle);
 
-  float cosA = cos(angle);
-  float sinA = sin(angle);
+  // 2) Compute rotation
+  float cosA = cos(a);
+  float sinA = sin(a);
 
-  // Rotate
+  // 3) Rotate each integer corner in float
   float rx1 = x1 * cosA - y1 * sinA;
   float ry1 = x1 * sinA + y1 * cosA;
   float rx2 = x2 * cosA - y2 * sinA;
@@ -581,97 +736,99 @@ void drawRotatedTriangle(bool filled, int linesToDraw, float screenX, float scre
   float rx3 = x3 * cosA - y3 * sinA;
   float ry3 = x3 * sinA + y3 * cosA;
 
-  // Translate to screen position
-  int ix1 = (int)(screenX + rx1);
-  int iy1 = (int)(screenY + ry1);
-  int ix2 = (int)(screenX + rx2);
-  int iy2 = (int)(screenY + ry2);
-  int ix3 = (int)(screenX + rx3);
-  int iy3 = (int)(screenY + ry3);
+  // 4) Translate to screen position
+  int ix1 = int(sx + rx1);
+  int iy1 = int(sy + ry1);
+  int ix2 = int(sx + rx2);
+  int iy2 = int(sy + ry2);
+  int ix3 = int(sx + rx3);
+  int iy3 = int(sy + ry3);
 
-  // arduboy.drawTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
-  if(linesToDraw == 0b111 || filled){
-    if(filled){
-      arduboy.fillTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
-    }
-    else{
-      arduboy.drawTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
-    }
+  // 5) Draw filled or outline, depending on linesToDraw
+  if (linesToDraw == 0b111 || filled) {
+      if (filled) {
+          arduboy.fillTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
+      } else {
+          arduboy.drawTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
+      }
+  } else {
+      // Draw only selected edges
+      if (linesToDraw & 0b001) {
+          arduboy.drawLine(ix1, iy1, ix2, iy2, WHITE);
+      }
+      if (linesToDraw & 0b010) {
+          arduboy.drawLine(ix2, iy2, ix3, iy3, WHITE);
+      }
+      if (linesToDraw & 0b100) {
+          arduboy.drawLine(ix3, iy3, ix1, iy1, WHITE);
+      }
   }
-  else{
-    if (linesToDraw & 0b001) {
-      arduboy.drawLine(ix1, iy1, ix2, iy2, WHITE);
-    }
-    if (linesToDraw & 0b010) {
-      arduboy.drawLine(ix2, iy2, ix3, iy3, WHITE);
-    }
-    if (linesToDraw & 0b100) {
-      arduboy.drawLine(ix3, iy3, ix1, iy1, WHITE);
-    }
-  }
-
-  
-  
-
 }
 
 // Draws the "ship" as a small triangle, given a screen position & angle.
-void drawShip(bool smallShip, bool simpleStyle, float screenX, float screenY, float angle) {
-  float x1 = 0,   y1 = -5;
-  float x2 = -5,  y2 = 0;
-  float x3 = 5,   y3 = 0;
-  // Triangle points relative to ship center
-  if(smallShip){
-    x1 = 0,   y1 = -4;
-    x2 = -2,  y2 = 2;
-    x3 = 2,   y3 = 2;
-  }
+void drawShip(bool smallShip, bool simpleStyle, FP screenX, FP screenY, FP angle) 
+{
+    // Define local triangle vertices (integers for convenience)
+    int x1 = 0,  y1 = -5;
+    int x2 = -5, y2 = 0;
+    int x3 = 5,  y3 = 0;
 
-
-  if(simpleStyle){
-    drawRotatedTriangle(false, 0b111, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
-  }
-  else{
-    // Triangle points relative to ship center
-    // x1 = 0,   y1 = -5;
-    // x2 = -5,  y2 = 0;
-    // x3 = 5,   y3 = 0;
-    drawRotatedTriangle(false, 0b101, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
-
-    // Draw the left small triangle
-    x1 = -3;   y1 = 3;
-    x2 = -5;  y2 = 1;
-    x3 = 0;   y3 = 0;
-    drawRotatedTriangle(false, 0b101, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
-
-    // Draw the right small triangle
-    x1 = 3;   y1 = 3;
-    x2 = 5;  y2 = 1;
-    x3 = 0;   y3 = 0;
-    drawRotatedTriangle(false, 0b101, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
-  }
-  if (arduboy.pressed(A_BUTTON)){
-    // Draw the thrust triangle
-    x1 = -2;   y1 = 3;
-    x2 = 0;  y2 = 7;
-    x3 = 2;   y3 = 3;
-    if(currentFuel > 0){
-      drawRotatedTriangle(true, 0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
-    }
-  }
-  if(arduboy.pressed(DOWN_BUTTON)){
-    if(currentFuel > 0){
-      //Draw tractor beam
-      x1 = -15;   y1 = 25;
-      x2 = 0;  y2 = 0;
-      x3 = 15;   y3 = 25;
-      drawRotatedTriangle(false, 0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
-      //Draw shield
-      drawRotatedRect(screenX, screenY, 12, 12, angle);
+    // Adjust if it's a "small" ship
+    if(smallShip) {
+        x1 = 0;  y1 = -4;
+        x2 = -2; y2 =  2;
+        x3 =  2; y3 =  2;
     }
 
-  }
+    // Draw either a simple triangle or multiple segments
+    if(simpleStyle) {
+        drawRotatedTriangle(
+            /*filled=*/false,
+            /*linesToDraw=*/0b111,
+            screenX, screenY, angle,
+            x1, y1, x2, y2, x3, y3
+        );
+    }
+    else {
+        // Main triangle
+        drawRotatedTriangle(false, 0b101, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
 
+        // Left small triangle
+        x1 = -3;  y1 =  3;
+        x2 = -5;  y2 =  1;
+        x3 =  0;  y3 =  0;
+        drawRotatedTriangle(false, 0b101, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+
+        // Right small triangle
+        x1 = 3;   y1 = 3;
+        x2 = 5;   y2 = 1;
+        x3 = 0;   y3 = 0;
+        drawRotatedTriangle(false, 0b101, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+    }
+
+    // If A_BUTTON is pressed, draw thrust triangle (if fuel left)
+    if (arduboy.pressed(A_BUTTON)) {
+        x1 = -2; y1 =  3;
+        x2 =  0; y2 =  7;
+        x3 =  2; y3 =  3;
+        if (currentFuel > 0) {
+            drawRotatedTriangle(true, 0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+        }
+    }
+
+    // If DOWN_BUTTON is pressed, draw tractor beam & shield (if fuel left)
+    if(arduboy.pressed(DOWN_BUTTON)) {
+        if(currentFuel > 0) {
+            // Draw tractor beam
+            x1 = -15; y1 = 25;
+            x2 =   0; y2 =  0;
+            x3 =  15; y3 = 25;
+            drawRotatedTriangle(false, 0b011, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
+
+            // Draw shield (drawRotatedRect requires FP arguments)
+            drawRotatedRect(screenX, screenY, FP(12), FP(12), angle);
+        }
+    }
 }
 
 
