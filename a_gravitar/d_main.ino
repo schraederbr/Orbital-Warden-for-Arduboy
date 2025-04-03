@@ -122,7 +122,7 @@ void testPointInPolygon() {
 
     // Measure time
     unsigned long startTime = micros();
-    bool inside = pointInPlanet(numPoints, testX, testY);
+    bool inside = pointInPolygon(numPoints, testPolygon, testX, testY);
     unsigned long endTime = micros();
 
     // Print timing and results
@@ -143,23 +143,23 @@ void testPointInPolygon() {
   Serial.println(F("Ending testPointInPolygon\n"));
 }
 void setup() {
-  // Serial.begin(115200);
+  Serial.begin(115200);
   arduboy.begin();
-  // delay(2000);
-  // testFixedPointInPolygon();
-  // while(true){
-  //     arduboy.pollButtons();
-  //     if(arduboy.buttonsState()){
-  //         break;
-  //     }
-  // }
+  delay(2000);
+  testFixedPointInPolygon();
+  while(true){
+      arduboy.pollButtons();
+      if(arduboy.buttonsState()){
+          break;
+      }
+  }
   arduboy.setFrameRate(FRAME_RATE);
   //Add a start screen instead of this delay so I can use a button presss randomness to seed random.
   //This allows for random in both simular and hardware 
   randomSeed(micros()); 
   randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
   
-  // for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
+  // for (int i = 0; i < circle_num_points; i++) {
   //   Serial.print("Point ");
   //   Serial.print(i);
   //   Serial.print(": (");
@@ -206,8 +206,7 @@ void updateTurretBullets() {
       // Move bullet
       turretBullets[i].x += turretBullets[i].vx;
       turretBullets[i].y += turretBullets[i].vy;
-      
-      if (pointInPlanet(CIRCLE_NUM_POINTS, turretBullets[i].x, turretBullets[i].y)) {
+      if (pointInPolygon(circle_num_points, circle_points, turretBullets[i].x, turretBullets[i].y)) {
         turretBullets[i].active = false;
         turretBullets[i].framesAlive = 0;
       }
@@ -361,7 +360,7 @@ void updateBullets(){
       bullets[i].x += bullets[i].vx;
       bullets[i].y += bullets[i].vy;
       //If bullet hits planet, delete
-      if (pointInPlanet(CIRCLE_NUM_POINTS, bullets[i].x, bullets[i].y)) {
+      if (pointInPolygon(circle_num_points, circle_points, bullets[i].x, bullets[i].y)) {
         bullets[i].active = false;
         bullets[i].framesAlive = 0;
       }
@@ -527,7 +526,7 @@ void loop() {
   float screenShipX = shipX - cameraX;
   float screenShipY = shipY - cameraY;
   drawShip(true, true, screenShipX, screenShipY, shipAngle);
-  if (pointInPlanet(CIRCLE_NUM_POINTS, shipX, shipY)) {
+  if (pointInPolygon(circle_num_points, circle_points, shipX, shipY)) {
     arduboy.print("HIT PLANET!");
     death();
   }
