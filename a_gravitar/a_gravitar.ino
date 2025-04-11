@@ -1,12 +1,9 @@
 #include <Arduboy2.h>
 #include <math.h>
 #include "Font3x5.h"
-#include <FixedPoints.h>
-#include <FixedPointsCommon.h>
+
 Arduboy2 arduboy;
 Font3x5 font3x5 = Font3x5();
-//This probably uses 32 bit math so we might as well boost it up
-using FP = SFixed<11,20>;
 
 //Frame count since starting life
 int frames_alive = 0;
@@ -75,14 +72,6 @@ struct Point2D {
   float y;
 };
 
-
-
-// Example data structure for our polygon points in fixed-point:
-struct FixedPoint2D {
-  FP x;
-  FP y;
-};
-
 struct Turret {
   float x;
   float y;
@@ -95,10 +84,8 @@ struct Turret {
   Point2D p4;
 };
 // Point2D* circle_points = nullptr;
-const int CIRCLE_NUM_POINTS  = (int)(360 / planetStepAngle);
-static Point2D circle_points[CIRCLE_NUM_POINTS];
-
-static FixedPoint2D fixed_points[CIRCLE_NUM_POINTS];
+static Point2D circle_points[360 / planetStepAngle];
+const int circle_num_points  = (int)(360 / planetStepAngle);
 //Might want these to be float
 int circleCenterX = 0;
 int circleCenterY = 0;
@@ -268,138 +255,25 @@ bool isWithinDistance(float x1, float y1, float x2, float y2, float distance) {
     return getDistanceSquared(x1, y1, x2, y2) <= distance * distance;
 }
 
-// pointInPlanet using fixed-point arithmetic
-bool fixedPointInPolygon(int numPoints, const FixedPoint2D points[], FP px, FP py) {
-  // Serial.println(F("Entering pointInPlanet (fixed-point)"));
-
+// Returns true if the point (px,py) is inside the polygon
+bool pointInPolygon(int numPoints, const Point2D points[], float px, float py) {
   bool inside = false;
-
-  // Print the point we are checking (cast to float for printing)
-//   Serial.print(F("  Checking point ("));
-//   Serial.print((float)px);
-//   Serial.print(F(", "));
-//   Serial.print((float)py);
-//   Serial.println(F(")"));
-
+  int pxInt = (int)px;
+  int pyInt = (int)py;
+  // The planet is defined by circle_points.
+  // Each point in circle_points is relative to (0,0); the actual world position is offset by worldCenterX/Y.
   int j = numPoints - 1;
   for (int i = 0; i < numPoints; i++) {
-    // Add offsets in fixed point
-    FP xi = points[i].x + worldCenterX;
-    FP yi = points[i].y + worldCenterY;
-    FP xj = points[j].x + worldCenterX;
-    FP yj = points[j].y + worldCenterY;
-
-    // Serial.print(F("  Edge from ("));
-    // Serial.print((float)xi);
-    // Serial.print(F(", "));
-    // Serial.print((float)yi);
-    // Serial.print(F(") to ("));
-    // Serial.print((float)xj);
-    // Serial.print(F(", "));
-    // Serial.print((float)yj);
-    // Serial.println(F(")"));
-
-    // Equivalent of the original check, but all in fixed-point:
-    //   if (((yi > py) != (yj > py)) &&
-    //       (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) { ... }
-
+    int xi = (int)points[i].x + worldCenterX;
+    int yi = (int)points[i].y + worldCenterY;
+    int xj = (int)points[j].x + worldCenterX;
+    int yj = (int)points[j].y + worldCenterY;
     // Check if the ray crosses the edge
-    bool differentSides = ((yi > py) != (yj > py));
-    if (differentSides) {
-      // Compute the intersection's X coordinate in fixed point
-      FP intersectionX = (xj - xi) * (py - yi) / (yj - yi) + xi;
-
-      if (px < intersectionX) {
-        inside = !inside;
-        // Serial.print(F("    Ray crosses edge, toggling inside -> "));
-        // Serial.println(inside ? F("true") : F("false"));
-      }
+    if (((yi > pyInt) != (yj > pyInt)) &&
+         (pxInt < (xj - xi) * (pyInt - yi) / (yj - yi) + xi)) {
+      inside = !inside;
     }
-
     j = i;
   }
-
-//   Serial.print(F("Leaving pointInPlanet, final inside = "));
-//   Serial.println(inside ? F("true") : F("false"));
   return inside;
 }
-
-bool pointInPlanet(int numPoints, float px, float py) {
-  FP pxFP(px);
-  FP pyFP(py);
-  return fixedPointInPolygon(numPoints, fixed_points, pxFP, pyFP);
-}
-
-// // The pointInPlanet function with serial prints at each major step
-// bool pointInPlanet(int numPoints, const Point2D points[], float px, float py) {
-//   Serial.println(F("Entering pointInPlanet"));
-
-//   bool inside = false;
-//   int pxInt = (int)px;
-//   int pyInt = (int)py;
-
-//   // Print the point we are checking
-//   Serial.print(F("  Checking point ("));
-//   Serial.print(pxInt);
-//   Serial.print(F(", "));
-//   Serial.print(pyInt);
-//   Serial.println(F(")"));
-
-//   int j = numPoints - 1;
-//   for (int i = 0; i < numPoints; i++) {
-//     int xi = (int)points[i].x + worldCenterX;
-//     int yi = (int)points[i].y + worldCenterY;
-//     int xj = (int)points[j].x + worldCenterX;
-//     int yj = (int)points[j].y + worldCenterY;
-
-//     Serial.print(F("  Edge from ("));
-//     Serial.print(xi);
-//     Serial.print(F(", "));
-//     Serial.print(yi);
-//     Serial.print(F(") to ("));
-//     Serial.print(xj);
-//     Serial.print(F(", "));
-//     Serial.print(yj);
-//     Serial.println(F(")"));
-
-//     // Check if the ray crosses the edge
-//     bool crosses = ((yi > pyInt) != (yj > pyInt)) &&
-//                    (pxInt < (xj - xi) * (pyInt - yi) / (float)(yj - yi) + xi);
-
-//     if (crosses) {
-//       inside = !inside;
-//       Serial.print(F("    Ray crosses edge, toggling inside -> "));
-//       Serial.println(inside ? F("true") : F("false"));
-//     }
-
-//     j = i;
-//   }
-
-//   Serial.print(F("Leaving pointInPlanet, final inside = "));
-//   Serial.println(inside ? F("true") : F("false"));
-//   return inside;
-// }
-
-
-// // Returns true if the point (px,py) is inside the polygon
-// bool pointInPlanet(int numPoints, const Point2D points[], float px, float py) {
-//   bool inside = false;
-//   int pxInt = (int)px;
-//   int pyInt = (int)py;
-//   // The planet is defined by circle_points.
-//   // Each point in circle_points is relative to (0,0); the actual world position is offset by worldCenterX/Y.
-//   int j = numPoints - 1;
-//   for (int i = 0; i < numPoints; i++) {
-//     int xi = (int)points[i].x + worldCenterX;
-//     int yi = (int)points[i].y + worldCenterY;
-//     int xj = (int)points[j].x + worldCenterX;
-//     int yj = (int)points[j].y + worldCenterY;
-//     // Check if the ray crosses the edge
-//     if (((yi > pyInt) != (yj > pyInt)) &&
-//          (pxInt < (xj - xi) * (pyInt - yi) / (yj - yi) + xi)) {
-//       inside = !inside;
-//     }
-//     j = i;
-//   }
-//   return inside;
-// }

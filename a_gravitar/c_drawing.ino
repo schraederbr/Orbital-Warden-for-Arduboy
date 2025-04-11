@@ -91,7 +91,7 @@ void drawStars() {
 void drawPlanet(bool drawLines = true, bool drawDots = false, bool drawTriangles = false, bool drawHorizontalLines = false){
   //Draw dots where lines connect
   if(drawDots){
-    for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
+    for (int i = 0; i < circle_num_points; i++) {
       int x = (int)((worldCenterX + circle_points[i].x) - cameraX);
       int y = (int)((worldCenterY + circle_points[i].y) - cameraY);
       arduboy.fillCircle(x, y, 1, WHITE);
@@ -100,15 +100,15 @@ void drawPlanet(bool drawLines = true, bool drawDots = false, bool drawTriangles
 
   // Draw planet as lines
   if(drawLines){
-    drawPolygonLines(circle_points, CIRCLE_NUM_POINTS, true);
+    drawPolygonLines(circle_points, circle_num_points, true);
   }
       
     
   if(drawHorizontalLines){
-    static int tx[CIRCLE_NUM_POINTS]; // or some safe max; must >= CIRCLE_NUM_POINTS
-    static int ty[CIRCLE_NUM_POINTS];
+    static int tx[circle_num_points]; // or some safe max; must >= circle_num_points
+    static int ty[circle_num_points];
 
-    for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
+    for (int i = 0; i < circle_num_points; i++) {
       tx[i] = (int)(worldCenterX + circle_points[i].x - cameraX);
       ty[i] = (int)(worldCenterY + circle_points[i].y - cameraY);
     }
@@ -116,27 +116,27 @@ void drawPlanet(bool drawLines = true, bool drawDots = false, bool drawTriangles
     //--------------------------------------------------------------------------
     // 4. Fill the polygon by horizontal scan lines
     //--------------------------------------------------------------------------
-    fillPolygonHorizontal(tx, ty, CIRCLE_NUM_POINTS);
+    fillPolygonHorizontal(tx, ty, circle_num_points);
   }
   
   // Draw planet as filled in triangles
   if (drawTriangles) {
       // 1. Convert all world-space points to screen-space **once** before the loop
-      static int tx[CIRCLE_NUM_POINTS]; // Store transformed X coordinates
-      static int ty[CIRCLE_NUM_POINTS]; // Store transformed Y coordinates
+      static int tx[circle_num_points]; // Store transformed X coordinates
+      static int ty[circle_num_points]; // Store transformed Y coordinates
 
-      for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
+      for (int i = 0; i < circle_num_points; i++) {
           tx[i] = (int)(worldCenterX + circle_points[i].x - cameraX);
           ty[i] = (int)(worldCenterY + circle_points[i].y - cameraY);
       }
 
       // 3. Iterate through edges and draw triangles
-      for (int i = 0; i < CIRCLE_NUM_POINTS - 1; i++) {
+      for (int i = 0; i < circle_num_points - 1; i++) {
           arduboy.fillTriangle(circleCenterX, circleCenterY, tx[i], ty[i], tx[i + 1], ty[i + 1], WHITE);
       }
 
       // 4. Close the loop: draw last triangle (avoids modulo)
-      arduboy.fillTriangle(circleCenterX, circleCenterY, tx[CIRCLE_NUM_POINTS - 1], ty[CIRCLE_NUM_POINTS - 1], tx[0], ty[0], WHITE);
+      arduboy.fillTriangle(circleCenterX, circleCenterY, tx[circle_num_points - 1], ty[circle_num_points - 1], tx[0], ty[0], WHITE);
   }
 
   
@@ -399,9 +399,9 @@ Point2D randomPointAtAngle(float angle_deg, float min_distance, float max_distan
 // Generates an array of slightly irregular points forming a "random circle."
 void randomCircle(int angle_step, float min_distance, float max_distance) {
   // We still produce approximately (360 / angle_step) points:
-  // Point2D* points = new Point2D[CIRCLE_NUM_POINTS];
+  // Point2D* points = new Point2D[circle_num_points];
 
-  for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
+  for (int i = 0; i < circle_num_points; i++) {
     // Base angle for this index
     int baseAngle = i * angle_step;
 
@@ -435,27 +435,22 @@ void randomCircle(int angle_step, float min_distance, float max_distance) {
   // 1. Compute centroid
   float sumX = 0;
   float sumY = 0;
-  for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
+  for (int i = 0; i < circle_num_points; i++) {
     sumX += circle_points[i].x;
     sumY += circle_points[i].y;
   }
-  circleCenterX = (int)(float(sumX) / CIRCLE_NUM_POINTS);
-  circleCenterY = (int)(float(sumY) / CIRCLE_NUM_POINTS);
+  circleCenterX = (int)(float(sumX) / circle_num_points);
+  circleCenterY = (int)(float(sumY) / circle_num_points);
 
-  // Save fixedPoint version of the circle
-  for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
-      fixed_points[i].x = FP(circle_points[i].x);
-      fixed_points[i].y = FP(circle_points[i].y);
-  }
 
 }
 
 void generateFuelPickups(int numFuelPickups){
     pickupCount = 0;
     for (int i = 0; i < numFuelPickups; i++) {
-        int pickupIndex = random(0, CIRCLE_NUM_POINTS);
+        int pickupIndex = random(0, circle_num_points);
         Point2D p1 = circle_points[pickupIndex];
-        Point2D p2 = circle_points[(pickupIndex + 1) % CIRCLE_NUM_POINTS];
+        Point2D p2 = circle_points[(pickupIndex + 1) % circle_num_points];
 
         float dx = p2.x - p1.x;
         float dy = p2.y - p1.y;
@@ -476,9 +471,9 @@ void generateFuelPickups(int numFuelPickups){
 void generateTurrets(int numTurrets) {
   turretCount = 0;
   for (int i = 0; i < numTurrets; i++) {
-    int turretIndex = random(0, CIRCLE_NUM_POINTS);
+    int turretIndex = random(0, circle_num_points);
     Point2D p1 = circle_points[turretIndex];
-    Point2D p2 = circle_points[(turretIndex + 1) % CIRCLE_NUM_POINTS];
+    Point2D p2 = circle_points[(turretIndex + 1) % circle_num_points];
 
     float dx = p2.x - p1.x;
     float dy = p2.y - p1.y;
