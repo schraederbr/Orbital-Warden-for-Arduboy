@@ -210,21 +210,6 @@ void updateBullets(){
       // Move bullet
       bullets[i].x += bullets[i].vx;
       bullets[i].y += bullets[i].vy;
-      //If bullet hits planet, delete
-      if (pointInPolygon(circle_num_points, circle_points, bullets[i].x, bullets[i].y)) {
-        bullets[i].active = false;
-        bullets[i].framesAlive = 0;
-      }
-      // Optionally deactivate if off-screen or out of world
-      if (bullets[i].x < 0 || bullets[i].x > worldWidth ||
-          bullets[i].y < 0 || bullets[i].y > worldHeight) {
-        bullets[i].active = false;
-        bullets[i].framesAlive = 0;
-      }
-      if(bullets[i].framesAlive > MAX_BULLET_FRAMES_ALIVE){
-        bullets[i].active = false;
-        bullets[i].framesAlive = 0;
-      }
       for (int t = 0; t < MAX_TURRETS; t++) {
         if(pointInRectangle(bullets[i].x, bullets[i].y, &turrets[t])){
           // Destroy bullet
@@ -232,9 +217,27 @@ void updateBullets(){
           bullets[i].active = false;
           turretCount--;
           turrets[t] = turrets[turretCount];
-          break;
         }
       }
+      // Optionally deactivate if off-screen or out of world
+      if (bullets[i].x < 0 || bullets[i].x > worldWidth ||
+          bullets[i].y < 0 || bullets[i].y > worldHeight) {
+        bullets[i].active = false;
+        bullets[i].framesAlive = 0;
+        continue;
+      }
+      if(bullets[i].framesAlive > MAX_BULLET_FRAMES_ALIVE){
+        bullets[i].active = false;
+        bullets[i].framesAlive = 0;
+        continue;
+      }
+      //If bullet hits planet, delete
+      if (pointInPolygon(circle_num_points, circle_points, bullets[i].x, bullets[i].y)) {
+        bullets[i].active = false;
+        bullets[i].framesAlive = 0;
+      }
+
+
     }
   }
 }
