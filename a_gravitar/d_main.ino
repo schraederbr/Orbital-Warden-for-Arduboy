@@ -7,6 +7,67 @@
 unsigned long stepStart;
 unsigned long stepDuration;
 
+void waitForPress(){
+  while(true){
+    arduboy.pollButtons();
+    if(arduboy.buttonsState()){
+      break;
+    }
+  }
+}
+
+void drawDpad(int x, int y){
+  // Offset
+  int o = 9;
+  int s = 7;
+  arduboy.fillRect(x - o, y, s, s);
+  arduboy.fillTriangle(
+    x - o + s - 1,        y,              
+    x - o + s - 1,        y + s - 1,     
+    x - o + s + (s / 2) - 1,        y + s / 2       
+  );
+  arduboy.fillRect(x, y + o, s, s);
+  arduboy.fillTriangle(
+    x,            y + o,      
+    x + s - 1,    y + o,      
+    x + s / 2,    y + o - (s / 2) 
+  );
+
+  arduboy.fillRect(x + o, y, s, s);
+  arduboy.fillTriangle(
+    x + o,            y,      
+    x + o,    y + s - 1,      
+    x + o - s / 2,    y + (s / 2)
+  );
+
+
+  // arduboy.drawRect(x, y - o, s, s);
+  // arduboy.fillTriangle(
+  //   x,            y - o + s - 1,      
+  //   x + s - 1,    y - o + s - 1,      
+  //   x + s / 2,    y - o + s + (s / 2) - 1 
+  // );
+
+}
+
+void tutorialScreen(){
+  arduboy.clear();
+  font3x5.println("Destroy Turrets     250 points");
+  font3x5.println("Collect Fuel     100 points");
+  font3x5.println("\n\n");
+  font3x5.println("          Thrust          Shoot");
+  arduboy.fillCircle(57, 11, 3);
+  font3x5.println("           turn left right");
+  arduboy.drawLine(36, 51, 41, 51);
+  font3x5.println("         shield/tractor beam");
+  arduboy.drawLine(27, 59, 32, 59);
+  arduboy.drawRect(67, 1, 4, 6);
+  arduboy.fillCircle(57, 11, 3);
+  drawDpad(16, 47);
+
+  arduboy.display();
+  waitForPress();
+}
 
 void setup() {
   #ifdef DEBUG
@@ -14,6 +75,7 @@ void setup() {
   #endif
   arduboy.begin();
   arduboy.setFrameRate(FRAME_RATE);
+  tutorialScreen();
   //Add a start screen instead of this delay so I can use a button presss randomness to seed random.
   //This allows for random in both simular and hardware 
   randomSeed(micros()); 
@@ -137,6 +199,7 @@ void resetBullets(){
   }
 }
 
+
 void death() {
   lives--;
   if(lives <= 0){
@@ -155,12 +218,8 @@ void death() {
     arduboy.println("to restart");
     arduboy.display();
     
-    while(true){
-      arduboy.pollButtons();
-      if(arduboy.buttonsState()){
-        break;
-      }
-    }
+    waitForPress();
+
     randomSeed(micros()); 
     randomCircle(planetStepAngle, planetMinRadius, planetMaxRadius);
 

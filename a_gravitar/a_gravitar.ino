@@ -1,9 +1,9 @@
 #include <Arduboy2.h>
 #include <math.h>
 #include <avr/pgmspace.h>
-
+#include "Font3x5.h"
 Arduboy2 arduboy;
-
+Font3x5 font3x5 = Font3x5();
 //Frame count since starting life
 int frames_alive = 0;
 
