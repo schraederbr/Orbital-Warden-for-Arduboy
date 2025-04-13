@@ -1,8 +1,17 @@
 #include <Arduboy2.h>
 #include <math.h>
 
+// #define DEBUG
+
+
+unsigned long stepStart;
+unsigned long stepDuration;
+
+
 void setup() {
+  #ifdef DEBUG
   Serial.begin(115200);
+  #endif
   arduboy.begin();
   arduboy.setFrameRate(FRAME_RATE);
   //Add a start screen instead of this delay so I can use a button presss randomness to seed random.
@@ -57,10 +66,17 @@ void updateTurretBullets() {
       // Move bullet
       turretBullets[i].x += turretBullets[i].vx;
       turretBullets[i].y += turretBullets[i].vy;
+      stepStart = micros();
       if (pointInPolygon(circle_num_points, circle_points, turretBullets[i].x, turretBullets[i].y)) {
         turretBullets[i].active = false;
         turretBullets[i].framesAlive = 0;
       }
+      stepDuration = micros() - stepStart;
+      #ifdef DEBUG
+      Serial.print(F("  pointInPolygon() took: "));
+      Serial.print(stepDuration);
+      Serial.println(F("us"));
+      #endif
       // Check if out of world, deactivate
       if (turretBullets[i].x < 0 || turretBullets[i].x > worldWidth ||
           turretBullets[i].y < 0 || turretBullets[i].y > worldHeight) {
@@ -211,6 +227,7 @@ void updateBullets(){
       bullets[i].x += bullets[i].vx;
       bullets[i].y += bullets[i].vy;
       for (int t = 0; t < MAX_TURRETS; t++) {
+        stepStart = micros();
         if(pointInRectangle(bullets[i].x, bullets[i].y, &turrets[t])){
           // Destroy bullet
           score += TURRET_SCORE;
@@ -218,6 +235,12 @@ void updateBullets(){
           turretCount--;
           turrets[t] = turrets[turretCount];
         }
+        stepDuration = micros() - stepStart;
+        #ifdef DEBUG
+        Serial.print(F("  pointInRectangle() took: "));
+        Serial.print(stepDuration);
+        Serial.println(F("us"));
+        #endif
       }
       // Optionally deactivate if off-screen or out of world
       if (bullets[i].x < 0 || bullets[i].x > worldWidth ||
@@ -232,11 +255,17 @@ void updateBullets(){
         continue;
       }
       //If bullet hits planet, delete
+      stepStart = micros();
       if (pointInPolygon(circle_num_points, circle_points, bullets[i].x, bullets[i].y)) {
         bullets[i].active = false;
         bullets[i].framesAlive = 0;
       }
-
+      stepDuration = micros() - stepStart;
+      #ifdef DEBUG
+      Serial.print(F("  pointInPolygon() took: "));
+      Serial.print(stepDuration);
+      Serial.println(F("us"));
+      #endif
 
     }
   }
@@ -274,131 +303,307 @@ void checkPlanetComplete(){
   }
 }
 
+
 void loop() {
+  // Measure the start of this frame in microseconds
+  unsigned long frameStart = micros();
+
+  // If Arduboy won't render a new frame, skip
   if (!arduboy.nextFrame()) return;
+
+  unsigned long stepStart, stepDuration;
+
+  // 1) pollButtons()
+  stepStart = micros();
   arduboy.pollButtons();
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("pollButtons() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
+
+  // 2) clear()
+  stepStart = micros();
   arduboy.clear();
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("arduboy.clear() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
+
   frames_alive++;
-  // --- 1. Ship Controls ---
+
+  // 2.1) Handle ship controls (rotation, thrust)
+  stepStart = micros();
   if (arduboy.pressed(LEFT_BUTTON)) {
     shipAngle -= ROTATION_SPEED;
   }
   if (arduboy.pressed(RIGHT_BUTTON)) {
     shipAngle += ROTATION_SPEED;
   }
-  //Thrusting
   if (arduboy.pressed(A_BUTTON)) {
-    if(currentFuel > 0){
+    if (currentFuel > 0) {
       velX += cos(shipAngle - PI / 2) * ACCELERATION;
       velY += sin(shipAngle - PI / 2) * ACCELERATION;
       currentFuel -= THRUST_FUEL_BURN_RATE / FRAME_RATE;
     }
-
   }
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("Ship controls took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
 
-// --- 1.1 Apply Gravity ---
-  // Compute the planet's center in world coordinates.
+  // 2.2) Apply gravity
+  stepStart = micros();
   float planetCenterX = worldCenterX + circleCenterX;
   float planetCenterY = worldCenterY + circleCenterY;
-
-  // Compute vector from ship to planet center.
   float dx = planetCenterX - shipX;
   float dy = planetCenterY - shipY;
   float distance = sqrt(dx * dx + dy * dy);
-  if (distance > 0) {  // Normalize the vector to avoid division by zero.
+  if (distance > 0) {
     dx /= distance;
     dy /= distance;
   }
-
-  //Making gravity acceleration constant
-  // if(dx > 0)
-  //   dx = 1;
-  // else
-  //   dx = -1;
-  // if(dy > 0)
-  //   dy = 1;
-  // else
-  //   dy = -1;
-
-
   velX += dx * GRAVITY_ACCEL;
   velY += dy * GRAVITY_ACCEL;
-  // velX += GRAVITY_ACCEL;
-  // velY += GRAVITY_ACCEL;
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("Gravity calc took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
 
-
-  // Update ship
+  // 2.3) Ship update + friction
+  stepStart = micros();
   shipX += velX;
   shipY += velY;
   velX   *= FRICTION;
   velY   *= FRICTION;
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("Ship update + friction took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
 
-  // Clamp ship in world
-  if (shipX < 0) shipX = 0;
+  // 2.4) Clamp ship position
+  stepStart = micros();
+  if (shipX < 0)           shipX = 0;
   if (shipX > worldWidth)  shipX = worldWidth;
-  if (shipY < 0) shipY = 0;
+  if (shipY < 0)           shipY = 0;
   if (shipY > worldHeight) shipY = worldHeight;
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("Clamp ship position took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
 
-  // --- 2. Camera ---
+  // 2.5) Camera
+  stepStart = micros();
   cameraX = shipX - (screenWidth / 2);
   cameraY = shipY - (screenHeight / 2);
   if (cameraX < 0) cameraX = 0;
-  if (cameraX > (worldWidth  - screenWidth))  cameraX = worldWidth  - screenWidth;
+  if (cameraX > worldWidth  - screenWidth)  cameraX = worldWidth  - screenWidth;
   if (cameraY < 0) cameraY = 0;
-  if (cameraY > (worldHeight - screenHeight)) cameraY = worldHeight - screenHeight;
+  if (cameraY > worldHeight - screenHeight) cameraY = worldHeight - screenHeight;
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("Camera update took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
 
-  // --- 3. Shooting Bullets on B Press ---
+  // 3) spawnBullet() if B pressed
   if (arduboy.justPressed(B_BUTTON)) {
+    stepStart = micros();
     spawnBullet(shipX, shipY, shipAngle);
+    stepDuration = micros() - stepStart;
+#ifdef DEBUG
+    Serial.print(F("spawnBullet() took: "));
+    Serial.print(stepDuration);
+    Serial.println(F("us"));
+#endif
   }
 
+  // 4) updateBullets()
+  stepStart = micros();
   updateBullets();
-  
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("updateBullets() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
 
-
-  if (arduboy.pressed(DOWN_BUTTON)){
+  // tractorBeam() if DOWN pressed
+  if (arduboy.pressed(DOWN_BUTTON)) {
+    stepStart = micros();
     tractorBeam();
+    stepDuration = micros() - stepStart;
+#ifdef DEBUG
+    Serial.print(F("tractorBeam() took: "));
+    Serial.print(stepDuration);
+    Serial.println(F("us"));
+#endif
   }
+
+  // 5) updateTurrets()
+  stepStart = micros();
   updateTurrets();
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("updateTurrets() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
+
+  // 6) updateTurretBullets()
+  stepStart = micros();
   updateTurretBullets();
-  // --- 5. Draw Everything ---
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("updateTurretBullets() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
 
-  // Stars (background, parallax)
+  // --- Draw Everything ---
+
+  // 7) drawStars()
+  stepStart = micros();
   drawStars();
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("drawStars() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
+
+  // 8) drawAllTurrets()
+  stepStart = micros();
   drawAllTurrets();
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("drawAllTurrets() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
+
+  // 9) drawTurretBullets()
+  stepStart = micros();
   drawTurretBullets();
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("drawTurretBullets() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
 
-  // Planet circle (optional regen with some other input if you like)
+  // 10) drawPlanet()
+  stepStart = micros();
   drawPlanet(true, false, false, false);
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("drawPlanet() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
 
-  
+  // 11) drawAllFuelPickups()
+  stepStart = micros();
   drawAllFuelPickups();
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("drawAllFuelPickups() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
 
-
+  // 12) drawPlayerBullets()
+  stepStart = micros();
   drawPlayerBullets();
-  // Draw the ship
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("drawPlayerBullets() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
+
+  // 13) drawShip()
   float screenShipX = shipX - cameraX;
   float screenShipY = shipY - cameraY;
+  stepStart = micros();
   drawShip(true, true, screenShipX, screenShipY, shipAngle);
-  if (pointInPolygon(circle_num_points, circle_points, shipX, shipY)) {
-    arduboy.print("HIT PLANET!");
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("drawShip() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
+
+  // 14) pointInPolygon()
+  stepStart = micros();
+  bool planetHit = pointInPolygon(circle_num_points, circle_points, shipX, shipY);
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("pointInPolygon() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
+
+  if (planetHit) {
+    arduboy.print(F("HIT PLANET!"));
+    stepStart = micros();
     death();
+    stepDuration = micros() - stepStart;
+#ifdef DEBUG
+    Serial.print(F("death() took: "));
+    Serial.print(stepDuration);
+    Serial.println(F("us"));
+#endif
   }
+
+  // HUD
   arduboy.print(lives);
   arduboy.setCursorX(24);
-  if(currentFuel > 0){
+  if (currentFuel > 0) {
     arduboy.print(currentFuel);
-  }
-  else{
-    arduboy.print("EMPTY");
+  } else {
+    arduboy.print(F("EMPTY"));
   }
   arduboy.setCursorX(88);
   arduboy.println(score);
   arduboy.setCursorX(0);
-  // arduboy.print(shipX);
-  // arduboy.print(" , ");
-  // arduboy.print(shipY);
-  // font3x5.print(lives);
+
+  // 15) arduboy.display()
+  stepStart = micros();
   arduboy.display();
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("arduboy.display() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+#endif
+
+  // 16) checkPlanetComplete()
+  stepStart = micros();
   checkPlanetComplete();
+  stepDuration = micros() - stepStart;
+#ifdef DEBUG
+  Serial.print(F("checkPlanetComplete() took: "));
+  Serial.print(stepDuration);
+  Serial.println(F("us"));
+
+  // Print total frame time
+  Serial.print(F("TOTAL FRAME took: "));
+  Serial.print(micros() - frameStart);
+  Serial.println(F("us"));
+  Serial.println(F("-----"));
+#endif
 }
+

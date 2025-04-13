@@ -1,9 +1,8 @@
 #include <Arduboy2.h>
 #include <math.h>
-#include "Font3x5.h"
+#include <avr/pgmspace.h>
 
 Arduboy2 arduboy;
-Font3x5 font3x5 = Font3x5();
 
 //Frame count since starting life
 int frames_alive = 0;
@@ -55,6 +54,7 @@ const float GRAVITY_ACCEL = 0.005f;  // Adjust this constant to change gravity s
 
 const float turretWidth = 3.0;
 const float turretHeight = 6.0;
+
 struct FuelPickup {
     float x;
     float y;
@@ -204,22 +204,21 @@ Point2D randomPointOnLine(const Point2D& p0, const Point2D& p1) {
     return result;
 }
 
-bool pointInTriangle(float px, float py, float x1, float y1, float x2, float y2, float x3, float y3) {
-    // Compute the area of the triangle using the determinant formula
-    float denominator = ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+bool pointInTriangle(
+  float px, float py,
+  float x1, float y1,
+  float x2, float y2,
+  float x3, float y3)
+{
+  // Build a small array of 3 points
+  Point2D triPoints[3] = {
+      { x1, y1 },
+      { x2, y2 },
+      { x3, y3 }
+  };
 
-    // Avoid division by zero (if the triangle is degenerate)
-    if (denominator == 0.0) return false;
-
-    // Compute barycentric coordinates
-    float alpha = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3)) / denominator;
-    float beta  = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3)) / denominator;
-    float gamma = 1.0 - alpha - beta;
-
-    // Check if the point is inside the triangle (all barycentric coordinates between 0 and 1)
-    return (alpha >= 0.0 && alpha <= 1.0) && 
-           (beta  >= 0.0 && beta  <= 1.0) && 
-           (gamma >= 0.0 && gamma <= 1.0);
+  // Just call pointInPolygonLocal for a 3-vertex polygon (triangle)
+  return pointInPolygonLocal(3, triPoints, px, py);
 }
 
 bool pointInRectangle(float px, float py, Turret* turret){
@@ -230,20 +229,40 @@ bool pointInRectangle(float px, float py, Turret* turret){
                           turret->p4.x, turret->p4.y);
 }
 bool pointInRectangle(
-    float px, float py,
-    float x1, float y1,
-    float x2, float y2,
-    float x3, float y3,
-    float x4, float y4)
+  float px, float py,
+  float x1, float y1,
+  float x2, float y2,
+  float x3, float y3,
+  float x4, float y4)
 {
-    // Check if point is in the triangle (x1,y1), (x2,y2), (x3,y3)
-    bool inFirstTriangle = pointInTriangle(px, py, x1, y1, x2, y2, x3, y3);
+  // Create an array of the rectangle's corners
+  Point2D rect[4] = {
+      {x1, y1},
+      {x2, y2},
+      {x3, y3},
+      {x4, y4}
+  };
 
-    // Check if point is in the triangle (x1,y1), (x3,y3), (x4,y4)
-    bool inSecondTriangle = pointInTriangle(px, py, x1, y1, x3, y3, x4, y4);
-
-    return (inFirstTriangle || inSecondTriangle);
+  // Now just call pointInPolygon() with our 4 corners.
+  // It returns true if (px,py) lies inside or on edges.
+  return pointInPolygonLocal(4, rect, px, py);
 }
+
+// bool pointInRectangle(
+//     float px, float py,
+//     float x1, float y1,
+//     float x2, float y2,
+//     float x3, float y3,
+//     float x4, float y4)
+// {
+//     // Check if point is in the triangle (x1,y1), (x2,y2), (x3,y3)
+//     bool inFirstTriangle = pointInTriangle(px, py, x1, y1, x2, y2, x3, y3);
+
+//     // Check if point is in the triangle (x1,y1), (x3,y3), (x4,y4)
+//     bool inSecondTriangle = pointInTriangle(px, py, x1, y1, x3, y3, x4, y4);
+
+//     return (inFirstTriangle || inSecondTriangle);
+// }
 
 float getDistanceSquared(float x1, float y1, float x2, float y2) {
     float dx = x2 - x1;
@@ -277,3 +296,29 @@ bool pointInPolygon(int numPoints, const Point2D points[], float px, float py) {
   }
   return inside;
 }
+
+bool pointInPolygonLocal(int numPoints, const Point2D points[], float px, float py) {
+  bool inside = false;
+  // Cast point to int if you like (but only if your geometry is in int coords)
+  int pxInt = (int)px;
+  int pyInt = (int)py;
+
+  int j = numPoints - 1;
+  for (int i = 0; i < numPoints; i++) {
+      // No more + worldCenterX or + worldCenterY
+      int xi = (int)points[i].x;
+      int yi = (int)points[i].y;
+      int xj = (int)points[j].x;
+      int yj = (int)points[j].y;
+
+      // Standard ray-casting edge check
+      if (((yi > pyInt) != (yj > pyInt)) &&
+          (pxInt < (xj - xi) * (pyInt - yi) / (float)(yj - yi) + xi)) {
+          inside = !inside;
+      }
+      j = i;
+  }
+  return inside;
+}
+
+
