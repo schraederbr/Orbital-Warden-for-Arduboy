@@ -54,9 +54,14 @@ void tutorialScreen(){
   arduboy.clear();
   font3x5.println("Destroy Turrets     250 points");
   font3x5.println("Collect Fuel     100 points");
-  font3x5.println("\n\n");
-  font3x5.println("          Thrust          Shoot");
-  arduboy.fillCircle(57, 11, 3);
+  font3x5.println("");
+  font3x5.println("                  Shoot");
+  arduboy.drawLine(63, 28, 68, 28);
+  font3x5.println("");
+  font3x5.println("                Thrust");
+  arduboy.drawLine(56, 43, 61, 43);
+  arduboy.fillCircle(48, 44, 4);
+  arduboy.fillCircle(54, 30, 4);
   font3x5.println("           turn left right");
   arduboy.drawLine(36, 51, 41, 51);
   font3x5.println("         shield/tractor beam");
