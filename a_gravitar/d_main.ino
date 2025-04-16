@@ -54,21 +54,25 @@ void tutorialScreen(){
   arduboy.clear();
   font3x5.println("Destroy Turrets     250 points");
   font3x5.println("Collect Fuel     100 points");
-  font3x5.println("");
-  font3x5.println("                  Shoot");
-  arduboy.drawLine(63, 28, 68, 28);
-  font3x5.println("");
-  font3x5.println("                Thrust");
-  arduboy.drawLine(56, 43, 61, 43);
-  arduboy.fillCircle(48, 44, 4);
-  arduboy.fillCircle(54, 30, 4);
-  font3x5.println("           turn left right");
+  font3x5.setCursor(78, 25);
+  font3x5.println("Shoot");
+  arduboy.drawLine(69, 28, 74, 28);
+  font3x5.setCursor(67, 35);
+  font3x5.println("Thrust");
+  arduboy.drawLine(60, 38, 65, 38);
+  arduboy.fillCircle(52, 38, 4);
+  arduboy.fillCircle(62, 28, 4);
+  font3x5.setCursor(45, 48);
+  font3x5.println("turn left right");
   arduboy.drawLine(36, 51, 41, 51);
-  font3x5.println("         shield/tractor beam");
+  font3x5.setCursor(38, 56);
+  font3x5.println("shield/tractor beam");
   arduboy.drawLine(27, 59, 32, 59);
   arduboy.drawRect(67, 1, 4, 6);
   arduboy.fillCircle(57, 11, 3);
   drawDpad(16, 47);
+  // I Probably want a Press any button to start 
+  // Also I could use the build in arduboy print for special characters like dashes and slashes
 
   arduboy.display();
   waitForPress();
