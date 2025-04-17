@@ -4,26 +4,44 @@
 #include "Font3x5.h"
 Arduboy2 arduboy;
 Font3x5 font3x5 = Font3x5();
+
+
+const uint8_t PROGMEM title[] = {
+72, 35,
+0x00, 0x00, 0x00, 0xf0, 0xf0, 0x10, 0x10, 0x10, 0x10, 0x10, 0xf0, 0x00, 0x00, 0x00, 0xc0, 0xc0, 0x40, 0x40, 0x40, 0xc0, 0xc0, 0x00, 0x00, 0x00, 0xfc, 0xfc, 0x40, 0x40, 0x40, 0x40, 0x40, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0xdc, 0xdc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x40, 0xf0, 0xf0, 0x40, 0x00, 0x00, 0x00, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0xc0, 0xc0, 0x00, 0x00, 0x00, 0x00, 0xfc, 0xfc, 0x00, 0x00, 0x00, 0x00, 
+0x00, 0x00, 0x00, 0x1f, 0x1f, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1f, 0x00, 0x00, 0x00, 0x1f, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x1f, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x1f, 0x10, 0x00, 0x00, 0x00, 0x1e, 0x1e, 0x12, 0x12, 0x12, 0x12, 0x12, 0x1f, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x1f, 0x00, 0x00, 0x00, 0x00, 
+0x00, 0x00, 0x00, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfc, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0xf0, 0x00, 0x00, 0x00, 0x00, 0xf0, 0xf0, 0x10, 0x10, 0x10, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x10, 0x10, 0x10, 0x10, 0x10, 0xff, 0x00, 0x00, 0x00, 0xf0, 0x90, 0x90, 0x90, 0x90, 0x90, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf8, 0x08, 0x08, 0x08, 0x08, 0x08, 0xf8, 0x00, 0x00, 0x00, 
+0x00, 0x00, 0x00, 0x07, 0x04, 0x04, 0x04, 0x04, 0x04, 0x07, 0x04, 0x04, 0x04, 0x04, 0x04, 0x07, 0x00, 0x00, 0x07, 0x04, 0x04, 0x04, 0x04, 0x04, 0x07, 0x00, 0x00, 0x00, 0x00, 0x07, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x04, 0x04, 0x04, 0x04, 0x04, 0x07, 0x00, 0x00, 0x00, 0x07, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+};
+
+
+const uint8_t PROGMEM shipSprite[] = {
+5, 7,
+0x60, 0x5c, 0x43, 0x5c, 0x60, 
+};
+
+
 //Frame count since starting life
 int frames_alive = 0;
 
 // -----------------------
 // World & Camera Settings
 // -----------------------
-const int screenWidth  = 128;
-const int screenHeight = 64;
-const int planetMinRadius = 40;
-const int planetMaxRadius = 150;
-const int planetStepAngle = 25;
+const int SCREEN_WIDTH  = 128;
+const int SCREEN_HEIGHT = 64;
+const int PLANET_MIN_RADIUS = 30;
+const int PLANET_MAX_RADIUS = 150;
+const int PLANET_STEP_ANGLE = 25;
+float bumpiness = 0.0f; // Percent of min/max distance to use
+float planetScale = 1.0f;
 
-const int worldWidth  = 512;
-const int worldHeight = 512;
+const int WORLD_WIDTH  = 400;
+const int WORLD_HEIGHT = 400;
 
-// Recalculate the world center
-const int worldCenterX = worldWidth  / 2; 
-const int worldCenterY = worldHeight / 2; 
+const int WORLD_CENTER_X = WORLD_WIDTH  / 2; 
+const int WORLD_CENTER_Y = WORLD_HEIGHT / 2; 
 
-// Camera variables (centered on the ship)
 float cameraX = 0;
 float cameraY = 0;
 
@@ -40,20 +58,20 @@ const int THRUST_FUEL_BURN_RATE = 1000; //per second when thrusting
 const int TRACTOR_FUEL_BURN_RATE = 2000; //extra fuel burned per second when tractor beam is active
 int currentFuel = DEFAULT_FUEL;
 int score = 0;
-float startX = worldWidth / 2;
-float startY = 256 - (planetMaxRadius + 10);  
-float shipX, shipY;  // Position of the ship in "world" coordinates
+float startX = WORLD_WIDTH / 2;
+float startY = (WORLD_HEIGHT / 2) - PLANET_MAX_RADIUS - 10;  
+float shipX, shipY;  // Position of the ship in world coordinates
 float shipAngle;      // Ship’s facing angle in radians
 float velX, velY;     // Velocity
 
-const float ACCELERATION   = 0.02f;  // How fast the ship accelerates
+const float ACCELERATION   = 0.02f;  
 const float ROTATION_SPEED = 0.1f;  // Radians/frame rotation
-const float FRICTION       = 0.997f; // Slows the ship gradually
-const float GRAVITY_ACCEL = 0.005f;  // Adjust this constant to change gravity strength.
+const float FRICTION       = 0.997f; 
+const float GRAVITY_ACCEL = 0.005f; 
 
 
-const float turretWidth = 3.0;
-const float turretHeight = 6.0;
+const float TURRET_WIDTH = 3.0;
+const float TURRET_HEIGHT = 6.0;
 
 struct FuelPickup {
     float x;
@@ -64,9 +82,7 @@ struct FuelPickup {
 
 FuelPickup fuelPickups[NUM_FUEL_PICKUPS];
 int pickupCount = 0;
-// -----------------------
-// Circle / Background
-// -----------------------
+
 struct Point2D {
   float x;
   float y;
@@ -83,49 +99,43 @@ struct Turret {
   Point2D p3;
   Point2D p4;
 };
-// Point2D* circle_points = nullptr;
-static Point2D circle_points[360 / planetStepAngle];
-const int circle_num_points  = (int)(360 / planetStepAngle);
-//Might want these to be float
+
+static Point2D circle_points[360 / PLANET_STEP_ANGLE];
+const int CIRCLE_NUM_POINTS  = (int)(360 / PLANET_STEP_ANGLE);
 int circleCenterX = 0;
 int circleCenterY = 0;
-const int MAX_TURRETS = 5; // how many stars you want
-bool gameOver = false;
+
+const int MAX_TURRETS = 5; 
+
 
 // Simple bullet structure
 struct Bullet {
-  bool active;  // Is this bullet slot in use?
-  float x;      // World position
-  float y;      // World position
-  float vx;     // Velocity X
-  float vy;     // Velocity Y
+  bool active;  
+  float x;      
+  float y;      
+  float vx;     
+  float vy;
   int framesAlive = 0;
 };
 
-// Turret bullet data
 static const int MAX_TURRET_BULLETS = 15;
 static const int MAX_TURRET_BULLET_FRAMES_ALIVE = 120;
 
 
 Bullet turretBullets[MAX_TURRET_BULLETS];
 
-// Each turret also needs a timer for shooting, say it fires every N frames
-// We'll store this in your Turret struct, or a parallel array of timers.
+//Frames between shots
 static const int TURRET_FIRE_DELAY = 90; 
 //Frames before turrets start firing when you start the game. 
 static const int TURRET_START_DELAY = 180;
 
-
 Turret turrets[MAX_TURRETS];
 int turretCount = 0;
 
-
-// Maximum number of on-screen bullets
+// Maximum number of on-screen player bullets
 static const int MAX_BULLETS = 5;
 static const float MAX_BULLET_FRAMES_ALIVE = 120;
 
-
-// The global array of bullets
 Bullet bullets[MAX_BULLETS];
 
 void spawnBullet(float x, float y, float angle) {
@@ -137,15 +147,10 @@ void spawnBullet(float x, float y, float angle) {
       bullets[i].x      = x;
       bullets[i].y      = y;
 
-      // Decide bullet speed
       float bulletSpeed = 1.0f;  // tweak as you wish
 
-      // We want bullet direction to match the ship’s facing
-      // Remember your code does "shipAngle = 0 => up," so we use (angle - PI/2)
       bullets[i].vx = cos(angle - PI / 2) * bulletSpeed;
       bullets[i].vy = sin(angle - PI / 2) * bulletSpeed;
-
-      // Stop after spawning 1 bullet
       break;
     }
   }
@@ -184,8 +189,6 @@ void spawnTurretBullet(float x, float y, float targetX, float targetY) {
 }
 
 
-
-
 // Returns a random float in [min_val, max_val].
 float randomFloat(float min_val, float max_val) {
   return min_val + (max_val - min_val) * (random(0, 10001) / 10000.0f);
@@ -210,14 +213,13 @@ bool pointInTriangle(
   float x2, float y2,
   float x3, float y3)
 {
-  // Build a small array of 3 points
+
   Point2D triPoints[3] = {
       { x1, y1 },
       { x2, y2 },
       { x3, y3 }
   };
 
-  // Just call pointInPolygonLocal for a 3-vertex polygon (triangle)
   return pointInPolygonLocal(3, triPoints, px, py);
 }
 
@@ -235,7 +237,7 @@ bool pointInRectangle(
   float x3, float y3,
   float x4, float y4)
 {
-  // Create an array of the rectangle's corners
+
   Point2D rect[4] = {
       {x1, y1},
       {x2, y2},
@@ -243,26 +245,8 @@ bool pointInRectangle(
       {x4, y4}
   };
 
-  // Now just call pointInPolygon() with our 4 corners.
-  // It returns true if (px,py) lies inside or on edges.
   return pointInPolygonLocal(4, rect, px, py);
 }
-
-// bool pointInRectangle(
-//     float px, float py,
-//     float x1, float y1,
-//     float x2, float y2,
-//     float x3, float y3,
-//     float x4, float y4)
-// {
-//     // Check if point is in the triangle (x1,y1), (x2,y2), (x3,y3)
-//     bool inFirstTriangle = pointInTriangle(px, py, x1, y1, x2, y2, x3, y3);
-
-//     // Check if point is in the triangle (x1,y1), (x3,y3), (x4,y4)
-//     bool inSecondTriangle = pointInTriangle(px, py, x1, y1, x3, y3, x4, y4);
-
-//     return (inFirstTriangle || inSecondTriangle);
-// }
 
 float getDistanceSquared(float x1, float y1, float x2, float y2) {
     float dx = x2 - x1;
@@ -274,19 +258,18 @@ bool isWithinDistance(float x1, float y1, float x2, float y2, float distance) {
     return getDistanceSquared(x1, y1, x2, y2) <= distance * distance;
 }
 
-// Returns true if the point (px,py) is inside the polygon
 bool pointInPolygon(int numPoints, const Point2D points[], float px, float py) {
   bool inside = false;
   int pxInt = (int)px;
   int pyInt = (int)py;
-  // The planet is defined by circle_points.
-  // Each point in circle_points is relative to (0,0); the actual world position is offset by worldCenterX/Y.
+
+  // Each point in circle_points is relative to (0,0); the actual world position is offset by WORLD_CENTER_X/Y.
   int j = numPoints - 1;
   for (int i = 0; i < numPoints; i++) {
-    int xi = (int)points[i].x + worldCenterX;
-    int yi = (int)points[i].y + worldCenterY;
-    int xj = (int)points[j].x + worldCenterX;
-    int yj = (int)points[j].y + worldCenterY;
+    int xi = (int)points[i].x + WORLD_CENTER_X;
+    int yi = (int)points[i].y + WORLD_CENTER_Y;
+    int xj = (int)points[j].x + WORLD_CENTER_X;
+    int yj = (int)points[j].y + WORLD_CENTER_Y;
     // Check if the ray crosses the edge
     if (((yi > pyInt) != (yj > pyInt)) &&
          (pxInt < (xj - xi) * (pyInt - yi) / (yj - yi) + xi)) {
@@ -299,13 +282,12 @@ bool pointInPolygon(int numPoints, const Point2D points[], float px, float py) {
 
 bool pointInPolygonLocal(int numPoints, const Point2D points[], float px, float py) {
   bool inside = false;
-  // Cast point to int if you like (but only if your geometry is in int coords)
+
   int pxInt = (int)px;
   int pyInt = (int)py;
 
   int j = numPoints - 1;
   for (int i = 0; i < numPoints; i++) {
-      // No more + worldCenterX or + worldCenterY
       int xi = (int)points[i].x;
       int yi = (int)points[i].y;
       int xj = (int)points[j].x;
@@ -322,3 +304,137 @@ bool pointInPolygonLocal(int numPoints, const Point2D points[], float px, float 
 }
 
 
+// Generates an array of slightly irregular points forming a "random circle."
+void generatePlanet(int angle_step, float min_distance, float max_distance) {
+  randomSeed(micros()); 
+  float maxHeight = WORLD_HEIGHT;
+  for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
+    // Base angle for this index
+    int baseAngle = i * angle_step;
+
+    // Add a small random offset in the range [-5..5]
+    int offset = random(-5, 6); // random(a, b) goes [a..(b-1)]
+    int angle = baseAngle + offset;
+
+    // Clamp angle to [0..359] just in case
+    if (angle < 0) {
+      angle += 360;
+    } else if (angle >= 360) {
+      angle -= 360;
+    }
+
+    bumpiness = 0.3f + randomFloat(0.0f, 1.0f);
+    if(bumpiness > 1.0f) {
+      bumpiness = 1.0f;
+    }
+
+    planetScale = 0.2f + randomFloat(0.0f, 0.8f);
+    if(planetScale > 1.0f) {
+      planetScale = 1.0f;
+    }
+
+    min_distance = min_distance + ((1.0f - bumpiness) * (max_distance - min_distance));
+     // Create a point at the (slightly randomized) angle
+    Point2D pt = randomPointAtAngle(angle, min_distance * planetScale, max_distance * planetScale);
+    // Optionally add a small x/y offset
+    pt.x += randomFloat(-2.0f, 2.0f);
+    pt.y += randomFloat(-2.0f, 2.0f);
+    
+    // Start the player at the top of the planet
+    if(pt.y < maxHeight){
+      maxHeight = pt.y;
+      startX = WORLD_CENTER_X + pt.x;
+      startY = WORLD_CENTER_Y + pt.y - 20;
+    }
+
+    circle_points[i] = pt;
+  }
+
+
+  // Compute centroid for gravity
+  float sumX = 0;
+  float sumY = 0;
+  for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
+    sumX += circle_points[i].x;
+    sumY += circle_points[i].y;
+  }
+  circleCenterX = (int)(float(sumX) / CIRCLE_NUM_POINTS);
+  circleCenterY = (int)(float(sumY) / CIRCLE_NUM_POINTS);
+}
+
+void generateFuelPickups(int numFuelPickups) {
+  pickupCount = 0;
+  for (int i = 0; i < numFuelPickups; i++) {
+      int pickupIndex = random(0, CIRCLE_NUM_POINTS);
+      Point2D p1 = circle_points[pickupIndex];
+      Point2D p2 = circle_points[(pickupIndex + 1) % CIRCLE_NUM_POINTS];
+
+      float dx = p2.x - p1.x;
+      float dy = p2.y - p1.y;
+      float edgeAngle = atan2(dy, dx);
+
+      // pickupAngle is perpendicular to the edge
+      float pickupAngle = edgeAngle + PI / 2.0;
+
+      Point2D pickupOffset = randomPointOnLine(p1, p2);
+
+      float worldX = WORLD_CENTER_X + pickupOffset.x;
+      float worldY = WORLD_CENTER_Y + pickupOffset.y;
+
+      float pickupRadius = 3.0f;
+      worldX += cos(pickupAngle) * pickupRadius;
+      worldY += sin(pickupAngle) * pickupRadius;
+
+      fuelPickups[pickupCount].x = worldX;
+      fuelPickups[pickupCount].y = worldY;
+      fuelPickups[pickupCount].angle = pickupAngle;
+      pickupCount++;
+  }
+}
+
+void generateTurrets(int numTurrets) {
+  turretCount = 0;
+  for (int i = 0; i < numTurrets; i++) {
+    int turretIndex = random(0, CIRCLE_NUM_POINTS);
+    Point2D p1 = circle_points[turretIndex];
+    Point2D p2 = circle_points[(turretIndex + 1) % CIRCLE_NUM_POINTS];
+
+    float dx = p2.x - p1.x;
+    float dy = p2.y - p1.y;
+    float edgeAngle = atan2(dy, dx);
+    float turretAngle = edgeAngle;
+
+    Point2D turretOffset = randomPointOnLine(p1, p2);
+    float worldX = WORLD_CENTER_X + turretOffset.x;
+    float worldY = WORLD_CENTER_Y + turretOffset.y;
+
+    turrets[turretCount].x = worldX;
+    turrets[turretCount].y = worldY;
+    turrets[turretCount].angle = turretAngle;
+    // Start the turret’s timer so they don’t all fire at once
+    turrets[turretCount].fireTimer = random(0, TURRET_FIRE_DELAY);
+    turretCount++;
+  }
+  for (int i = 0; i < turretCount; i++) {
+    float pivotX = turrets[i].x - cameraX; 
+    float pivotY = turrets[i].y - cameraY;
+    float angle  = turrets[i].angle;      
+
+    setTurretCorners(&turrets[i], pivotX, pivotY, TURRET_WIDTH, TURRET_HEIGHT);
+  }
+
+  // init all turret bullets as inactive
+  for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
+    turretBullets[i].active = false;
+  }
+
+}
+
+void waitForPress(){
+  while(true){
+    arduboy.pollButtons();
+    if(arduboy.buttonsState()){
+      break;
+    }
+  }
+}

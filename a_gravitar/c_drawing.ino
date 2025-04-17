@@ -2,17 +2,11 @@
 #include <math.h>
 
 
-
-
-
-// -------------------------
-// Stars (Background)
-// -------------------------
-static const int NUM_STARS = 1; // how many stars you want
+static const int NUM_STARS = 0;
 struct Star {
   float x;
   float y;
-  int   size;  // 1..3, for example
+  int   size;  
 };
 Star stars[NUM_STARS];
 int starCount = 0;
@@ -21,69 +15,49 @@ int starCount = 0;
 const float STAR_PARALLAX = 0.5f;
 
 void generateStars() {
-  // Create the full set of stars.
   for (int i = 0; i < NUM_STARS; i++) {
-    stars[i].x    = random(0, worldWidth);   // anywhere in 0..512
-    stars[i].y    = random(0, worldHeight);  // anywhere in 0..512
+    stars[i].x    = random(0, WORLD_WIDTH);   // anywhere in 0..512
+    stars[i].y    = random(0, WORLD_HEIGHT);  // anywhere in 0..512
     stars[i].size = random(0, 2);            // 1..3 size
   }
-  // Initially, we have NUM_STARS
-  starCount = NUM_STARS;
 
+  starCount = NUM_STARS;
   // Now remove any star that lies within the planet's bounding circle.
-  // cullStarsInsidePlanet();
-  
+  cullStarsInsidePlanet();
 }
 
 // This function compacts the array so that any star inside the planet is skipped.
 void cullStarsInsidePlanet() {
   int j = 0;  // index for "kept" stars
   for (int i = 0; i < starCount; i++) {
-    float dx = stars[i].x - worldCenterX;
-    float dy = stars[i].y - worldCenterY;
+    float dx = stars[i].x - WORLD_CENTER_X;
+    float dy = stars[i].y - WORLD_CENTER_Y;
     float distSq = dx * dx + dy * dy;
 
     // If this star is OUTSIDE the planet's bounding circle, keep it.
     // If it's inside, skip it.
-    if (distSq >= (planetMaxRadius * planetMaxRadius)) {
+    if (distSq >= (PLANET_MAX_RADIUS * PLANET_MAX_RADIUS)) {
       stars[j] = stars[i];
       j++;
     }
-    // otherwise we do nothing, effectively dropping that star.
   }
-  // Now 'j' is the number of stars we kept
   starCount = j;
 }
 
-// Draw all stars with parallax. Because they’re "far away," we shift them by
-// cameraX * STAR_PARALLAX instead of cameraX * 1.0.
+// Draw all stars with parallax.
 void drawStars() {
   for (int i = 0; i < NUM_STARS; i++) {
-    // starX, starY in world coordinates
     float starX = stars[i].x;
     float starY = stars[i].y;
     int   starSize = stars[i].size;
-
-    // ---------------------------
-    // 1. Check if star is inside the planet's bounding circle
-    // ---------------------------
-    // float dx = starX - worldCenterX;
-    // float dy = starY - worldCenterY;
-    // float distSq = dx * dx + dy * dy;
-    // if (distSq < (planetMaxRadius * planetMaxRadius)) {
-    //   // This star is "behind" the planet, so skip drawing
-    //   continue;
-    // }
 
     // convert to screen coordinates with parallax factor
     int screenX = (int)(starX - (cameraX * STAR_PARALLAX));
     int screenY = (int)(starY - (cameraY * STAR_PARALLAX));
 
     // Only draw if on screen
-    if (screenX >= 0 && screenX < screenWidth &&
-        screenY >= 0 && screenY < screenHeight) {
-      // A single pixel star (or use fillCircle for a larger dot)
-      // arduboy.drawPixel(screenX, screenY, WHITE);
+    if (screenX >= 0 && screenX < SCREEN_WIDTH &&
+        screenY >= 0 && screenY < SCREEN_HEIGHT) {
       arduboy.fillCircle(screenX, screenY, starSize, WHITE);
     }
   }
@@ -91,52 +65,52 @@ void drawStars() {
 void drawPlanet(bool drawLines = true, bool drawDots = false, bool drawTriangles = false, bool drawHorizontalLines = false){
   //Draw dots where lines connect
   if(drawDots){
-    for (int i = 0; i < circle_num_points; i++) {
-      int x = (int)((worldCenterX + circle_points[i].x) - cameraX);
-      int y = (int)((worldCenterY + circle_points[i].y) - cameraY);
+    for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
+      int x = (int)((WORLD_CENTER_X + circle_points[i].x) - cameraX);
+      int y = (int)((WORLD_CENTER_Y + circle_points[i].y) - cameraY);
       arduboy.fillCircle(x, y, 1, WHITE);
     }
   }
 
   // Draw planet as lines
   if(drawLines){
-    drawPolygonLines(circle_points, circle_num_points, true);
+    drawPolygonLines(circle_points, CIRCLE_NUM_POINTS, true);
   }
       
-    
+  // Draw planet as filled in by using horizontal scan lines
   if(drawHorizontalLines){
-    static int tx[circle_num_points]; // or some safe max; must >= circle_num_points
-    static int ty[circle_num_points];
+    static int tx[CIRCLE_NUM_POINTS]; // or some safe max; must >= CIRCLE_NUM_POINTS
+    static int ty[CIRCLE_NUM_POINTS];
 
-    for (int i = 0; i < circle_num_points; i++) {
-      tx[i] = (int)(worldCenterX + circle_points[i].x - cameraX);
-      ty[i] = (int)(worldCenterY + circle_points[i].y - cameraY);
+    for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
+      tx[i] = (int)(WORLD_CENTER_X + circle_points[i].x - cameraX);
+      ty[i] = (int)(WORLD_CENTER_Y + circle_points[i].y - cameraY);
     }
 
     //--------------------------------------------------------------------------
     // 4. Fill the polygon by horizontal scan lines
     //--------------------------------------------------------------------------
-    fillPolygonHorizontal(tx, ty, circle_num_points);
+    fillPolygonHorizontal(tx, ty, CIRCLE_NUM_POINTS);
   }
   
   // Draw planet as filled in triangles
   if (drawTriangles) {
       // 1. Convert all world-space points to screen-space **once** before the loop
-      static int tx[circle_num_points]; // Store transformed X coordinates
-      static int ty[circle_num_points]; // Store transformed Y coordinates
+      static int tx[CIRCLE_NUM_POINTS]; // Store transformed X coordinates
+      static int ty[CIRCLE_NUM_POINTS]; // Store transformed Y coordinates
 
-      for (int i = 0; i < circle_num_points; i++) {
-          tx[i] = (int)(worldCenterX + circle_points[i].x - cameraX);
-          ty[i] = (int)(worldCenterY + circle_points[i].y - cameraY);
+      for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
+          tx[i] = (int)(WORLD_CENTER_X + circle_points[i].x - cameraX);
+          ty[i] = (int)(WORLD_CENTER_Y + circle_points[i].y - cameraY);
       }
 
       // 3. Iterate through edges and draw triangles
-      for (int i = 0; i < circle_num_points - 1; i++) {
+      for (int i = 0; i < CIRCLE_NUM_POINTS - 1; i++) {
           arduboy.fillTriangle(circleCenterX, circleCenterY, tx[i], ty[i], tx[i + 1], ty[i + 1], WHITE);
       }
 
       // 4. Close the loop: draw last triangle (avoids modulo)
-      arduboy.fillTriangle(circleCenterX, circleCenterY, tx[circle_num_points - 1], ty[circle_num_points - 1], tx[0], ty[0], WHITE);
+      arduboy.fillTriangle(circleCenterX, circleCenterY, tx[CIRCLE_NUM_POINTS - 1], ty[CIRCLE_NUM_POINTS - 1], tx[0], ty[0], WHITE);
   }
 
   
@@ -150,10 +124,8 @@ void drawPlayerBullets(){
       // Convert bullet position from world coords to screen coords
       float bx = bullets[i].x - cameraX;
       float by = bullets[i].y - cameraY;
-      // Draw a pixel or small circle for the bullet
-      // arduboy.drawPixel((int)bx, (int)by, WHITE);
+      // Draw a small circle for the bullet
       arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
-      // Or arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
     }
   }
 }
@@ -163,10 +135,8 @@ void drawTurretBullets() {
     if (turretBullets[i].active) {
       float bx = turretBullets[i].x - cameraX;
       float by = turretBullets[i].y - cameraY;
-      // Draw as a small dot
-      // arduboy.drawPixel((int)bx, (int)by, WHITE);
+      // Draw as a small circle
       arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
-      // Or arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
     }
   }
 }
@@ -323,21 +293,10 @@ void setTurretCorners(Turret* turret, float screenX, float screenY, float width,
   turret->p3.y = turret->y + ry3;
   turret->p4.x = turret->x + rx4;
   turret->p4.y = turret->y + ry4;
-  // Serial.println("Turret:");
-  // Serial.println("Pos:");
-  // Serial.print(turret->x);
-  // Serial.print(" , ");
-  // Serial.println(turret->y);
-  // Serial.println("Corners:");
-  // Serial.print(turret->p1.x); Serial.print(" , "); Serial.println(turret->p1.y);
-  // Serial.print(turret->p2.x); Serial.print(" , "); Serial.println(turret->p2.y);
-  // Serial.print(turret->p3.x); Serial.print(" , "); Serial.println(turret->p3.y);
-  // Serial.print(turret->p4.x); Serial.print(" , "); Serial.println(turret->p4.y);
 
 
 }
-//My coordinates may be off
-// I should try drawing an unrotated square first
+
 // Draws a rotated rectangle of given width & height, centered at (screenX, screenY), at the specified angle.
 void drawRotatedRect(float screenX, float screenY, float width, float height, float angle)
 {
@@ -396,132 +355,11 @@ Point2D randomPointAtAngle(float angle_deg, float min_distance, float max_distan
   return pt;
 }
 
-// Generates an array of slightly irregular points forming a "random circle."
-void randomCircle(int angle_step, float min_distance, float max_distance) {
-  // We still produce approximately (360 / angle_step) points:
-  // Point2D* points = new Point2D[circle_num_points];
-
-  for (int i = 0; i < circle_num_points; i++) {
-    // Base angle for this index
-    int baseAngle = i * angle_step;
-
-    // Add a small random offset in the range [-5..5]
-    int offset = random(-5, 6); // random(a, b) goes [a..(b-1)]
-    int angle = baseAngle + offset;
-
-    // Clamp angle to [0..359] just in case
-    if (angle < 0) {
-      angle += 360;
-    } else if (angle >= 360) {
-      angle -= 360;
-    }
-
-    // Create a point at the (slightly randomized) angle
-    Point2D pt = randomPointAtAngle(angle, min_distance, max_distance);
-
-    // Optionally add a small x/y offset
-    pt.x += randomFloat(-2.0f, 2.0f);
-    pt.y += randomFloat(-2.0f, 2.0f);
-
-    circle_points[i] = pt;
-    // if(i == 0){
-    //   Serial.print(pt.x);
-    //   Serial.print(" , ");
-    //   Serial.println(pt.y);
-    //     startX = pt.x;
-    //     startY = pt.y;
-    // }
-  }
-  // 1. Compute centroid
-  float sumX = 0;
-  float sumY = 0;
-  for (int i = 0; i < circle_num_points; i++) {
-    sumX += circle_points[i].x;
-    sumY += circle_points[i].y;
-  }
-  circleCenterX = (int)(float(sumX) / circle_num_points);
-  circleCenterY = (int)(float(sumY) / circle_num_points);
-
-
-}
-
-void generateFuelPickups(int numFuelPickups) {
-  pickupCount = 0;
-  for (int i = 0; i < numFuelPickups; i++) {
-      int pickupIndex = random(0, circle_num_points);
-      Point2D p1 = circle_points[pickupIndex];
-      Point2D p2 = circle_points[(pickupIndex + 1) % circle_num_points];
-
-      float dx = p2.x - p1.x;
-      float dy = p2.y - p1.y;
-      float edgeAngle = atan2(dy, dx);
-
-      // pickupAngle is perpendicular to the edge
-      float pickupAngle = edgeAngle + PI / 2.0;
-
-      // Choose a random point between p1 and p2
-      Point2D pickupOffset = randomPointOnLine(p1, p2);
-
-      // Convert to "world" coordinates
-      float worldX = worldCenterX + pickupOffset.x;
-      float worldY = worldCenterY + pickupOffset.y;
-
-      // Push the pickup inward by its radius (3 pixels).
-      // If this ends up on the wrong side, flip '-=' to '+='.
-      float pickupRadius = 3.0f;
-      worldX += cos(pickupAngle) * pickupRadius;
-      worldY += sin(pickupAngle) * pickupRadius;
-
-      fuelPickups[pickupCount].x = worldX;
-      fuelPickups[pickupCount].y = worldY;
-      fuelPickups[pickupCount].angle = pickupAngle;
-      pickupCount++;
-  }
-}
-
-
-void generateTurrets(int numTurrets) {
-  turretCount = 0;
-  for (int i = 0; i < numTurrets; i++) {
-    int turretIndex = random(0, circle_num_points);
-    Point2D p1 = circle_points[turretIndex];
-    Point2D p2 = circle_points[(turretIndex + 1) % circle_num_points];
-
-    float dx = p2.x - p1.x;
-    float dy = p2.y - p1.y;
-    float edgeAngle = atan2(dy, dx);
-    float turretAngle = edgeAngle;
-
-    Point2D turretOffset = randomPointOnLine(p1, p2);
-    float worldX = worldCenterX + turretOffset.x;
-    float worldY = worldCenterY + turretOffset.y;
-
-    turrets[turretCount].x = worldX;
-    turrets[turretCount].y = worldY;
-    turrets[turretCount].angle = turretAngle;
-    // Start the turret’s timer so they don’t all fire at once
-    turrets[turretCount].fireTimer = random(0, TURRET_FIRE_DELAY);
-    turretCount++;
-  }
-  for (int i = 0; i < turretCount; i++) {
-    float pivotX = turrets[i].x - cameraX; // pivot = planet perimeter
-    float pivotY = turrets[i].y - cameraY;
-    float angle  = turrets[i].angle;       // tangent + π/2 (or however you computed)
-
-    setTurretCorners(&turrets[i], pivotX, pivotY, turretWidth, turretHeight);
-  }
-
-  // Also init all turret bullets as inactive
-  for (int i = 0; i < MAX_TURRET_BULLETS; i++) {
-    turretBullets[i].active = false;
-  }
-
-}
-
 void drawAllFuelPickups(){
     for (int i = 0; i < pickupCount; i++) {
         float pivotX = fuelPickups[i].x - cameraX; // pivot = planet perimeter
         float pivotY = fuelPickups[i].y - cameraY;
+        // The commented-out code is for drawing fuel pickups as triangles
         // float angle  = fuelPickups[i].angle + PI/2;       // tangent + π/2 (or however you computed)
 
         // float pickupW = 4.0;  // or whatever size
@@ -547,7 +385,6 @@ void drawAllFuelPickups(){
 }
 
 
-
 void drawAllTurrets() {
   for (int i = 0; i < turretCount; i++) {
     float pivotX = turrets[i].x - cameraX; // pivot = planet perimeter
@@ -562,25 +399,24 @@ void drawAllTurrets() {
 void drawPolygonLines(Point2D* points, int num_points, bool close_shape) {
   if (num_points <= 0) return;
 
-  int prevX = (int)(worldCenterX + points[0].x - cameraX);
-  int prevY = (int)(worldCenterY + points[0].y - cameraY);
+  int prevX = (int)(WORLD_CENTER_X + points[0].x - cameraX);
+  int prevY = (int)(WORLD_CENTER_Y + points[0].y - cameraY);
 
   for (int i = 1; i < num_points; i++) {
-    int x = (int)(worldCenterX + points[i].x - cameraX);
-    int y = (int)(worldCenterY + points[i].y - cameraY);
+    int x = (int)(WORLD_CENTER_X + points[i].x - cameraX);
+    int y = (int)(WORLD_CENTER_Y + points[i].y - cameraY);
     arduboy.drawLine(prevX, prevY, x, y, WHITE);
     prevX = x;
     prevY = y;
   }
 
   if (close_shape) {
-    int firstX = (int)(worldCenterX + points[0].x - cameraX);
-    int firstY = (int)(worldCenterY + points[0].y - cameraY);
+    int firstX = (int)(WORLD_CENTER_X + points[0].x - cameraX);
+    int firstY = (int)(WORLD_CENTER_Y + points[0].y - cameraY);
     arduboy.drawLine(prevX, prevY, firstX, firstY, WHITE);
   }
 }
 
-//Use drawline instead of drawTriangle so you can skip one of the lines
 void drawRotatedTriangle(bool filled, int linesToDraw, float screenX, float screenY, float angle, int x1, int y1, int x2, int y2, int x3, int y3){
 
   float cosA = cos(angle);
@@ -602,7 +438,6 @@ void drawRotatedTriangle(bool filled, int linesToDraw, float screenX, float scre
   int ix3 = (int)(screenX + rx3);
   int iy3 = (int)(screenY + ry3);
 
-  // arduboy.drawTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
   if(linesToDraw == 0b111 || filled){
     if(filled){
       arduboy.fillTriangle(ix1, iy1, ix2, iy2, ix3, iy3, WHITE);
@@ -628,7 +463,8 @@ void drawRotatedTriangle(bool filled, int linesToDraw, float screenX, float scre
 
 }
 
-// Draws the "ship" as a small triangle, given a screen position & angle.
+// simpleStyle = true: Draws a simple triangle
+// simpleStyle = false: Draws a ship similar to the one in Gravitar
 void drawShip(bool smallShip, bool simpleStyle, float screenX, float screenY, float angle) {
   float x1 = 0,   y1 = -5;
   float x2 = -5,  y2 = 0;
@@ -645,10 +481,6 @@ void drawShip(bool smallShip, bool simpleStyle, float screenX, float screenY, fl
     drawRotatedTriangle(false, 0b111, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
   }
   else{
-    // Triangle points relative to ship center
-    // x1 = 0,   y1 = -5;
-    // x2 = -5,  y2 = 0;
-    // x3 = 5,   y3 = 0;
     drawRotatedTriangle(false, 0b101, screenX, screenY, angle, x1, y1, x2, y2, x3, y3);
 
     // Draw the left small triangle
