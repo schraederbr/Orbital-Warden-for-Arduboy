@@ -1,10 +1,10 @@
 // 128 / 8 + 1 = 17 vertices
-constexpr uint8_t STEP_X      = 8;
-constexpr uint8_t NUM_VERTS   = 17;
+constexpr uint8_t STEP_X      = 40;
+constexpr uint8_t NUM_VERTS   = 40;
 constexpr uint8_t MIN_GAP     = 20;   // play with this
-constexpr uint8_t WANDER_MAX  = 5;    // max Δy per step
+constexpr uint8_t WANDER_MAX  = 30;    // max Δy per step
 constexpr uint8_t SPIKE_ODDS  = 25;   // 0‑99; bigger → more spikes
-constexpr uint8_t SPIKE_SIZE  = 6;    // pixels added/removed
+constexpr uint8_t SPIKE_SIZE  = 20;    // pixels added/removed
 constexpr uint8_t GAP_VERTS   = 4;   // how many vertices are flattened
 constexpr uint8_t TOP_GAP_Y   = 4;   // y‑coordinate of ceiling inside the gap
 uint8_t gapStartIdx;                 // first vertex inside the bay
@@ -23,21 +23,21 @@ void generateHorizontalPlanet()
   randomSeed(micros());
 
   topY[0] = 10;                // initial rough height
-  botY[0] = 63 - 10;
+  botY[0] = WORLD_HEIGHT - 10;
 
   for (uint8_t i = 1; i < NUM_VERTS; ++i) {
     int8_t dTop = random(-WANDER_MAX,  WANDER_MAX + 1);
     int8_t dBot = random(-WANDER_MAX,  WANDER_MAX + 1);
 
-    topY[i] = constrain(int8_t(topY[i-1]) + dTop, 0, 63 - MIN_GAP - 1);
-    botY[i] = constrain(int8_t(botY[i-1]) + dBot, topY[i] + MIN_GAP, 63);
+    topY[i] = constrain(int8_t(topY[i-1]) + dTop, 0, WORLD_HEIGHT - MIN_GAP - 1);
+    botY[i] = constrain(int8_t(botY[i-1]) + dBot, topY[i] + MIN_GAP, WORLD_HEIGHT);
 
     if (random(100) < SPIKE_ODDS) {
       uint8_t spike = SPIKE_SIZE + random(-2, 3);
       if (random(2))
-        topY[i] = constrain(topY[i] + spike, 0, 63 - MIN_GAP - 1);
+        topY[i] = constrain(topY[i] + spike, 0, WORLD_HEIGHT - MIN_GAP - 1);
       else
-        botY[i] = constrain(botY[i] - spike, topY[i] + MIN_GAP, 63);
+        botY[i] = constrain(botY[i] - spike, topY[i] + MIN_GAP, WORLD_HEIGHT);
     }
   }
 
@@ -50,12 +50,12 @@ void generateHorizontalPlanet()
       botY[gapStartIdx + i] = TOP_GAP_Y + MIN_GAP;
   }
 
-  // -------- remember where to spawn the ship --------------------
-  // spawnX = (gapStart + GAP_VERTS / 2) * STEP_X;  // x = centre of the bay
-  // spawnY = TOP_GAP_Y + 8;                        // a little below the roof
+
+//   startX = (gapStart + GAP_VERTS / 2) * STEP_X;  // x = centre of the bay
+//   startY = TOP_GAP_Y + 8;                        // a little below the roof
 }
 
-
+// Need to make horizontal planet use the world coordinate system properly
 void drawHorizontalPlanet()
 {
   for (uint8_t i = 0; i < NUM_VERTS - 1; ++i) {

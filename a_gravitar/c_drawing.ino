@@ -62,6 +62,71 @@ void drawStars() {
     }
   }
 }
+
+
+void drawHorizontalPlanet(bool drawLines         = true,
+                          bool drawDots          = false,
+                          bool fillBetweenBands  = false)
+{
+  // -------- local helpers ---------------------------------------------------
+  constexpr int16_t WORLD_LEFT_X = 0;   /* ← tweak if needed (world X of vert 0) */
+  constexpr int8_t  X_STEP       = 2;   /* ← tweak: world units per vertex      */
+
+  // 1.  Draw dots at each vertex (optional) ----------------------------------
+  if (drawDots)
+  {
+    for (uint8_t i = 0; i < NUM_VERTS; ++i)
+    {
+      int16_t sx = WORLD_LEFT_X + i * X_STEP - cameraX;
+      arduboy.drawPixel(sx,              topY[i] - cameraY, WHITE);
+      arduboy.drawPixel(sx,              botY[i] - cameraY, WHITE);
+    }
+  }
+
+  // 2.  Draw the outline (optional) ------------------------------------------
+  if (drawLines)
+  {
+    for (uint8_t i = 0; i < NUM_VERTS - 1; ++i)
+    {
+      // Skip the gap so the entrance stays open
+      if (i >= gapStartIdx && i < gapEndIdx) continue;
+
+      int16_t x1 = WORLD_LEFT_X + i       * X_STEP - cameraX;
+      int16_t x2 = WORLD_LEFT_X + (i + 1) * X_STEP - cameraX;
+
+      // Top surface
+      arduboy.drawLine(x1, topY[i]     - cameraY,
+                       x2, topY[i + 1] - cameraY, WHITE);
+
+      // Bottom surface
+      arduboy.drawLine(x1, botY[i]     - cameraY,
+                       x2, botY[i + 1] - cameraY, WHITE);
+    }
+  }
+
+  // 3.  Fill the band between top & bottom (optional) ------------------------
+  if (fillBetweenBands)
+  {
+    for (uint8_t i = 0; i < NUM_VERTS; ++i)
+    {
+      if (i >= gapStartIdx && i <= gapEndIdx) continue; // leave gap clear
+
+      int16_t sx    = WORLD_LEFT_X + i * X_STEP - cameraX;
+      int16_t yTop  = topY[i] - cameraY;
+      int16_t yBot  = botY[i] - cameraY;
+
+      // Make sure we’re inside the screen
+      if (yBot >= 0 && yTop < HEIGHT)
+      {
+        if (yTop   < 0)      yTop = 0;
+        if (yBot   > HEIGHT) yBot = HEIGHT;
+
+        arduboy.drawFastVLine(sx, yTop, yBot - yTop + 1, WHITE);
+      }
+    }
+  }
+}
+
 void drawPlanet(bool drawLines = true, bool drawDots = false, bool drawTriangles = false, bool drawHorizontalLines = false){
   //Draw dots where lines connect
   if(drawDots){
@@ -112,10 +177,6 @@ void drawPlanet(bool drawLines = true, bool drawDots = false, bool drawTriangles
       // 4. Close the loop: draw last triangle (avoids modulo)
       arduboy.fillTriangle(circleCenterX, circleCenterY, tx[CIRCLE_NUM_POINTS - 1], ty[CIRCLE_NUM_POINTS - 1], tx[0], ty[0], WHITE);
   }
-
-  
-    
-
 }
 
 void drawPlayerBullets(){

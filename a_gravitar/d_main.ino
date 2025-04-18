@@ -87,10 +87,15 @@ void setup() {
   arduboy.setFrameRate(FRAME_RATE);
   startScreen();
   randomSeed(micros()); 
-  generatePlanet(PLANET_STEP_ANGLE, PLANET_MIN_RADIUS, PLANET_MAX_RADIUS);
+  if(horizontalPlanet){
+    generateHorizontalPlanet();
+  }
+  // generatePlanet(PLANET_STEP_ANGLE, PLANET_MIN_RADIUS, PLANET_MAX_RADIUS);
+
   
-  generateFuelPickups(NUM_FUEL_PICKUPS);
-  generateTurrets(MAX_TURRETS);
+  
+  // generateFuelPickups(NUM_FUEL_PICKUPS);
+  // generateTurrets(MAX_TURRETS);
   generateStars();
   resetShip();
 
@@ -125,10 +130,10 @@ void updateTurretBullets() {
       turretBullets[i].x += turretBullets[i].vx;
       turretBullets[i].y += turretBullets[i].vy;
       stepStart = micros();
-      if (pointInPolygon(CIRCLE_NUM_POINTS, circle_points, turretBullets[i].x, turretBullets[i].y)) {
-        turretBullets[i].active = false;
-        turretBullets[i].framesAlive = 0;
-      }
+      // if (pointInPolygon(CIRCLE_NUM_POINTS, circle_points, turretBullets[i].x, turretBullets[i].y)) {
+      //   turretBullets[i].active = false;
+      //   turretBullets[i].framesAlive = 0;
+      // }
       stepDuration = micros() - stepStart;
       #ifdef DEBUG
       Serial.print(F("  pointInPolygon() took: "));
@@ -212,10 +217,13 @@ void death() {
     waitForPress();
 
     randomSeed(micros()); 
-    generatePlanet(PLANET_STEP_ANGLE, PLANET_MIN_RADIUS, PLANET_MAX_RADIUS);
+    if(horizontalPlanet){
+      generateHorizontalPlanet();
+    }
+    // generatePlanet(PLANET_STEP_ANGLE, PLANET_MIN_RADIUS, PLANET_MAX_RADIUS);
 
-    generateFuelPickups(NUM_FUEL_PICKUPS);
-    generateTurrets(MAX_TURRETS);
+    // generateFuelPickups(NUM_FUEL_PICKUPS);
+    // generateTurrets(MAX_TURRETS);
     generateStars();
     
   }
@@ -300,10 +308,10 @@ void updateBullets(){
       }
       //If bullet hits planet, delete
       stepStart = micros();
-      if (pointInPolygon(CIRCLE_NUM_POINTS, circle_points, bullets[i].x, bullets[i].y)) {
-        bullets[i].active = false;
-        bullets[i].framesAlive = 0;
-      }
+      // if (pointInPolygon(CIRCLE_NUM_POINTS, circle_points, bullets[i].x, bullets[i].y)) {
+      //   bullets[i].active = false;
+      //   bullets[i].framesAlive = 0;
+      // }
       stepDuration = micros() - stepStart;
       #ifdef DEBUG
       Serial.print(F("  pointInPolygon() took: "));
@@ -336,10 +344,13 @@ void checkPlanetComplete(){
       }
     }
     randomSeed(micros()); 
-    generatePlanet(PLANET_STEP_ANGLE, PLANET_MIN_RADIUS, PLANET_MAX_RADIUS);
+    if(horizontalPlanet){
+      generateHorizontalPlanet();
+    }
+    // generatePlanet(PLANET_STEP_ANGLE, PLANET_MIN_RADIUS, PLANET_MAX_RADIUS);
 
-    generateFuelPickups(NUM_FUEL_PICKUPS);
-    generateTurrets(MAX_TURRETS);
+    // generateFuelPickups(NUM_FUEL_PICKUPS);
+    // generateTurrets(MAX_TURRETS);
     generateStars();
       
     frames_alive = 0;
@@ -351,6 +362,25 @@ void checkPlanetComplete(){
 void drawLives(){
   for (int i = 0; i < lives; i++) {
     Sprites::drawSelfMasked(i * 6, 0, shipSprite, 0);
+  }
+}
+
+void applyGravity() {
+  if (horizontalPlanet) {
+    velY += GRAVITY_ACCEL;          
+  } else {
+    float planetCenterX = WORLD_CENTER_X + circleCenterX;
+    float planetCenterY = WORLD_CENTER_Y + circleCenterY;
+    float dx = planetCenterX - shipX;
+    float dy = planetCenterY - shipY;
+    float distance = sqrt(dx * dx + dy * dy);
+    if (distance > 0) {
+      dx /= distance;
+      dy /= distance;
+    }
+
+    velX += dx * GRAVITY_ACCEL;     // pull toward planet center
+    velY += dy * GRAVITY_ACCEL;
   }
 }
 
@@ -407,17 +437,7 @@ void loop() {
 
   // Apply gravity
   stepStart = micros();
-  float planetCenterX = WORLD_CENTER_X + circleCenterX;
-  float planetCenterY = WORLD_CENTER_Y + circleCenterY;
-  float dx = planetCenterX - shipX;
-  float dy = planetCenterY - shipY;
-  float distance = sqrt(dx * dx + dy * dy);
-  if (distance > 0) {
-    dx /= distance;
-    dy /= distance;
-  }
-  velX += dx * GRAVITY_ACCEL;
-  velY += dy * GRAVITY_ACCEL;
+  applyGravity();
   stepDuration = micros() - stepStart;
 #ifdef DEBUG
   Serial.print(F("Gravity calc took: "));
@@ -552,9 +572,13 @@ void loop() {
   Serial.println(F("us"));
 #endif
 
-  // drawPlanet()
   stepStart = micros();
-  drawPlanet(true, false, false, false);
+  if(horizontalPlanet){
+    drawHorizontalPlanet(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, true, false, false);
+  }else{
+    drawPlanet(true, false, false, false);
+  }
+  
   stepDuration = micros() - stepStart;
 #ifdef DEBUG
   Serial.print(F("drawPlanet() took: "));
@@ -596,7 +620,8 @@ void loop() {
 
   // pointInPolygon()
   stepStart = micros();
-  bool planetHit = pointInPolygon(CIRCLE_NUM_POINTS, circle_points, shipX, shipY);
+  // bool planetHit = pointInPolygon(CIRCLE_NUM_POINTS, circle_points, shipX, shipY);
+  bool planetHit = false;
   stepDuration = micros() - stepStart;
 #ifdef DEBUG
   Serial.print(F("pointInPolygon() took: "));

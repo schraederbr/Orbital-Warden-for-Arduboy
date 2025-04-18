@@ -35,6 +35,7 @@ const int PLANET_MAX_RADIUS = 150;
 const int PLANET_STEP_ANGLE = 25;
 float bumpiness = 0.0f; // Percent of min/max distance to use
 float planetScale = 1.0f;
+bool horizontalPlanet = true;
 
 const int WORLD_WIDTH  = 400;
 const int WORLD_HEIGHT = 400;
@@ -100,8 +101,10 @@ struct Turret {
   Point2D p4;
 };
 
-static Point2D circle_points[360 / PLANET_STEP_ANGLE];
-const int CIRCLE_NUM_POINTS  = (int)(360 / PLANET_STEP_ANGLE);
+// static Point2D circle_points[360 / PLANET_STEP_ANGLE];
+// const int CIRCLE_NUM_POINTS  = (int)(360 / PLANET_STEP_ANGLE);
+static Point2D circle_points[1];
+const int CIRCLE_NUM_POINTS  = 1;
 int circleCenterX = 0;
 int circleCenterY = 0;
 
@@ -130,7 +133,7 @@ static const int TURRET_FIRE_DELAY = 90;
 static const int TURRET_START_DELAY = 180;
 
 Turret turrets[MAX_TURRETS];
-int turretCount = 0;
+int turretCount = 1;
 
 // Maximum number of on-screen player bullets
 static const int MAX_BULLETS = 5;
