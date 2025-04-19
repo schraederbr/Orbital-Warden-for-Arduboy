@@ -84,6 +84,7 @@ void setup() {
   Serial.begin(115200);
   #endif
   arduboy.begin();
+  // beep2.begin();
   arduboy.setFrameRate(FRAME_RATE);
   startScreen();
   randomSeed(micros()); 
@@ -148,17 +149,19 @@ void updateTurretBullets() {
       }
       //Down button means the shield is active
       if(!arduboy.pressed(DOWN_BUTTON)){
-        // Check collision with player
-        // May want to use a polygon check instead of circle
-        float dx = turretBullets[i].x - shipX;
-        float dy = turretBullets[i].y - shipY;
-        float distSq = dx*dx + dy*dy;
-        float collideRadius = 3.0f;   // tweak as needed
-        if (distSq < (collideRadius * collideRadius)) {
-          // Hit the player!
-          death();
-          // Deactivate bullet
-          turretBullets[i].active = false;
+        if(currentFuel > 0){
+          // Check collision with player
+          // May want to use a polygon check instead of circle
+          float dx = turretBullets[i].x - shipX;
+          float dy = turretBullets[i].y - shipY;
+          float distSq = dx*dx + dy*dy;
+          float collideRadius = 3.0f;   // tweak as needed
+          if (distSq < (collideRadius * collideRadius)) {
+            // Hit the player!
+            death();
+            // Deactivate bullet
+            turretBullets[i].active = false;
+          }
         }
       }
       
@@ -228,6 +231,7 @@ void death() {
 void tractorBeam(){
   currentFuel -= TRACTOR_FUEL_BURN_RATE / FRAME_RATE;
   if(currentFuel > 0){
+    tractorBeamSound();
     // Tractor beam triangle in ship-local coordinates
     float localX1 = -15, localY1 = 25;
     float localX2 = 0,   localY2 = 0;
@@ -361,6 +365,8 @@ void loop() {
   // If Arduboy won't render a new frame, skip
   if (!arduboy.nextFrame()) return;
 
+  beep2.timer();
+
   unsigned long stepStart, stepDuration;
 
   stepStart = micros();
@@ -396,7 +402,11 @@ void loop() {
       velX += cos(shipAngle - PI / 2) * ACCELERATION;
       velY += sin(shipAngle - PI / 2) * ACCELERATION;
       currentFuel -= THRUST_FUEL_BURN_RATE / FRAME_RATE;
+      thrustSound();
     }
+  }
+  else{
+    sound.noTone();
   }
   stepDuration = micros() - stepStart;
 #ifdef DEBUG
@@ -491,7 +501,9 @@ void loop() {
   // tractorBeam() if DOWN pressed
   if (arduboy.pressed(DOWN_BUTTON)) {
     stepStart = micros();
-    tractorBeam();
+    if(currentFuel > 0){
+      tractorBeam();
+    }
     stepDuration = micros() - stepStart;
 #ifdef DEBUG
     Serial.print(F("tractorBeam() took: "));

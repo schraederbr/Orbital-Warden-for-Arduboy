@@ -51,7 +51,7 @@ const int FRAME_RATE = 60;
 const int DEFAULT_LIVES = 3;
 int lives = DEFAULT_LIVES;
 const int NUM_FUEL_PICKUPS = 3;
-const int DEFAULT_FUEL = 20000;
+const int DEFAULT_FUEL = 15000;
 const int FUEL_PER_PICKUP = 2500;
 const int FUEL_PICKUP_SCORE = 100;
 const int THRUST_FUEL_BURN_RATE = 1000; //per second when thrusting
@@ -151,6 +151,7 @@ void spawnBullet(float x, float y, float angle) {
 
       bullets[i].vx = cos(angle - PI / 2) * bulletSpeed;
       bullets[i].vy = sin(angle - PI / 2) * bulletSpeed;
+      playerShootSound();
       break;
     }
   }
@@ -182,6 +183,7 @@ void spawnTurretBullet(float x, float y, float targetX, float targetY) {
         turretBullets[i].vy = (dy / length) * speed;
 
         // Done
+        turretShootSound();
         break;
       }
     }
