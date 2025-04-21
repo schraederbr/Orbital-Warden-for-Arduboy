@@ -195,6 +195,8 @@ void resetBullets(){
 
 
 void death() {
+  sound.noTone();  
+  beep2.noTone();
   lives--;
   if(lives <= 0){
     arduboy.clear();
@@ -231,7 +233,7 @@ void death() {
 void tractorBeam(){
   currentFuel -= TRACTOR_FUEL_BURN_RATE / FRAME_RATE;
   if(currentFuel > 0){
-    tractorBeamSound();
+    tractorHeld = true;
     // Tractor beam triangle in ship-local coordinates
     float localX1 = -15, localY1 = 25;
     float localX2 = 0,   localY2 = 0;
@@ -259,10 +261,14 @@ void tractorBeam(){
         // Replace the removed pickup with the last one in the array
         fuelPickups[i] = fuelPickups[pickupCount - 1];
         pickupCount--;
+        fuelJustPickedUp = true;
       } else {
         i++; 
       }
     }
+  }
+  else{
+    tractorHeld = false;
   }
 }
 
@@ -282,6 +288,8 @@ void updateBullets(){
           // Destroy Turret
           turretCount--;
           turrets[t] = turrets[turretCount];
+          // Used for playing sounds
+          turretJustExploded = true;
         }
         stepDuration = micros() - stepStart;
         #ifdef DEBUG
@@ -321,6 +329,8 @@ void updateBullets(){
 
 void checkPlanetComplete(){
   if(turretCount <= 0 && pickupCount <= 0){
+    sound.noTone();  
+    beep2.noTone();
     arduboy.clear();
     arduboy.setCursor(0, 0);
     arduboy.println("Turrets Destroyed!");
@@ -364,8 +374,8 @@ void loop() {
 
   // If Arduboy won't render a new frame, skip
   if (!arduboy.nextFrame()) return;
-
   beep2.timer();
+  handleTones();
 
   unsigned long stepStart, stepDuration;
 
@@ -402,11 +412,14 @@ void loop() {
       velX += cos(shipAngle - PI / 2) * ACCELERATION;
       velY += sin(shipAngle - PI / 2) * ACCELERATION;
       currentFuel -= THRUST_FUEL_BURN_RATE / FRAME_RATE;
-      thrustSound();
+      thrusting = true;
+    }
+    else{
+      thrusting = false;
     }
   }
   else{
-    sound.noTone();
+    thrusting = false;
   }
   stepDuration = micros() - stepStart;
 #ifdef DEBUG
@@ -504,12 +517,18 @@ void loop() {
     if(currentFuel > 0){
       tractorBeam();
     }
+    else{
+      tractorHeld = false;
+    }
     stepDuration = micros() - stepStart;
 #ifdef DEBUG
     Serial.print(F("tractorBeam() took: "));
     Serial.print(stepDuration);
     Serial.println(F("us"));
 #endif
+  }
+  else{
+    tractorHeld = false;
   }
 
   // updateTurrets()
