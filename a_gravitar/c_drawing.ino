@@ -248,10 +248,10 @@ void setTurretCorners(Turret* turret, float screenX, float screenY, float width,
   // We'll define them in a clockwise (or counter-clockwise) order
 
   //Use this if you want the turret to be smaller on the top, similar to the turret shape in gravitar
-  //float x1 = -halfW/2;  float y1 = -halfH;  // top-left
-  // float x2 =  halfW/2;  float y2 = -halfH;  // top-right
-  float x1 = -halfW;  float y1 = -halfH;  // top-left
-  float x2 =  halfW;  float y2 = -halfH;  // top-right
+  float x1 = -halfW/2;  float y1 = -halfH;  // top-left
+  float x2 =  halfW/2;  float y2 = -halfH;  // top-right
+  // float x1 = -halfW;  float y1 = -halfH;  // top-left
+  // float x2 =  halfW;  float y2 = -halfH;  // top-right
   float x3 =  halfW;  float y3 =  halfH;  // bottom-right
   float x4 = -halfW;  float y4 =  halfH;  // bottom-left
   

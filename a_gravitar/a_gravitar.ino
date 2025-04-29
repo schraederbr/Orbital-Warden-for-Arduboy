@@ -72,8 +72,8 @@ const float FRICTION       = 0.997f;
 const float GRAVITY_ACCEL = 0.005f; 
 
 
-const float TURRET_WIDTH = 3.0;
-const float TURRET_HEIGHT = 6.0;
+const float TURRET_WIDTH = 8.0;
+const float TURRET_HEIGHT = 4.0;
 
 struct FuelPickup {
     float x;
