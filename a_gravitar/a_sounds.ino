@@ -3,7 +3,7 @@
 BeepPin2 beep2;
 
 ArduboyTones sound(arduboy.audio.enabled);
-
+inline bool audioEnabled() { return arduboy.audio.enabled(); }
 
 PROGMEM const uint16_t SFX_LASER_300[] = {
   270,  8,  320,  7,  295,  9,  255, 10,  335,  6,
@@ -53,7 +53,7 @@ bool tractorHeld = false;
 enum ToneState { SND_IDLE, SND_THRUST, SND_TRACTOR_BEAM, SND_FUEL_PICKUP, SND_TURRET };
 ToneState toneState = SND_IDLE;
 
-void handleTones() {
+void handleSounds() {
 
   // 1) Fire the turret‑destroyed sound when the event occurs
   if (turretJustExploded && toneState != SND_TURRET) {
@@ -96,33 +96,21 @@ void handleTones() {
       toneState = SND_IDLE;
   }
 
-  // 4) Optional: if A is still down after the turret sound ends,
-  //    the block above will restart the thruster on the very next frame.
 }
 
 
-// void thrustSound(){
-//     //Only play thrust sound if we aren't playing the tractor beam sound
-//     if(!arduboy.pressed(DOWN_BUTTON)){
-//         sound.tones(THRUST_SFX);
-//     }
-// }
 
 void playerShootSound(){
+    if (!audioEnabled()) return;
     beep2.tone(beep2.freq(250), 8);
 }
 
 void turretShootSound(){
+    if (!audioEnabled()) return;
     beep2.tone(beep2.freq(180), 6);
 }
 
 void fuelPickedUpSound(){
+  if (!audioEnabled()) return;
   beep2.tone(beep2.freq(350), 12);
 }
-// void tractorBeamSound(){
-//     sound.tones(TRACTOR_BEAM_SFX); 
-// }
-
-// void turretDestroyedSound(){
-//   sound.tones(TURRET_DESTROYED_SFX);
-// }

@@ -46,37 +46,58 @@ void drawDpad(int x, int y){
 
 void startScreen(){
   arduboy.clear();
-  font3x5.println("Destroy Turrets     250 points");
+  // Sprites::drawSelfMasked(0, 0, title, 0);
+  // arduboy.display();
+  // waitForPress();
+  font3x5.println(F("Destroy Turrets     250 points"));
   arduboy.drawRect(67, 1, 4, 6);
 
-  font3x5.println("Collect Fuel     100 points");
+  font3x5.println(F("Collect Fuel     100 points"));
   arduboy.fillCircle(57, 11, 3);
+  font3x5.setCursor(0, 25);
+  font3x5.println(F("Press B for no sound"));
+  font3x5.setCursor(0, 35);
+  font3x5.println(F("Press A for sound"));
 
-  Sprites::drawSelfMasked(0, 16, title, 0);
+  
 
   font3x5.setCursor(105, 25);
-  font3x5.println("Shoot");
+  font3x5.println(F("Shoot"));
+  font3x5.setCursor(89, 25);
+  font3x5.setTextColor(BLACK);
   arduboy.fillCircle(90, 28, 4);
+  font3x5.println(F("B"));
   arduboy.drawLine(97, 28, 102, 28);
-
-  font3x5.setCursor(96, 35);
-  font3x5.println("Thrust");
+  font3x5.setTextColor(WHITE);
+  font3x5.setCursor(100, 35);
+  font3x5.println(F("Thrust"));
+  font3x5.setCursor(79, 35);
+  font3x5.setTextColor(BLACK);
   arduboy.fillCircle(80, 38, 4);
+  font3x5.println(F("A"));
+  font3x5.setTextColor(WHITE);
+  
   arduboy.drawLine(88, 38, 93, 38);
   
   
   font3x5.setCursor(45, 49);
-  font3x5.println("rotate left or right");
+  font3x5.println(F("rotate left or right"));
   arduboy.drawLine(36, 52, 41, 52);
 
   font3x5.setCursor(36, 57);
-  font3x5.println("shield and tractor beam");
+  font3x5.println(F("shield and tractor beam"));
   arduboy.drawLine(27, 60, 32, 60);
 
   drawDpad(16, 48);
 
   arduboy.display();
   waitForPress();
+  if(arduboy.pressed(B_BUTTON)){
+    arduboy.audio.off();                  
+    sound.noTone();
+  }
+
+
 }
 
 void setup() {
@@ -201,8 +222,8 @@ void death() {
   if(lives <= 0){
     arduboy.clear();
     arduboy.setCursor(0,0);
-    arduboy.println("Game Over!");
-    arduboy.println("Final Score: ");
+    arduboy.println(F("Game Over!"));
+    arduboy.println(F("Final Score: "));
     arduboy.println(score);
     arduboy.display();
     delay(1000);
@@ -210,8 +231,8 @@ void death() {
     currentFuel = DEFAULT_FUEL;
     score = 0;
     arduboy.println();
-    arduboy.println("Press any button");
-    arduboy.println("to restart");
+    arduboy.println(F("Press any button"));
+    arduboy.println(F("to restart"));
     arduboy.display();
     
     waitForPress();
@@ -328,19 +349,20 @@ void updateBullets(){
 }
 
 void checkPlanetComplete(){
-  if(turretCount <= 0 && pickupCount <= 0){
+  // if(turretCount <= 0 && pickupCount <= 0){
+  if(turretCount <= 0){
     sound.noTone();  
     beep2.noTone();
     arduboy.clear();
     arduboy.setCursor(0, 0);
-    arduboy.println("Turrets Destroyed!");
-    arduboy.println("Current score: " );
+    arduboy.println(F("Turrets Destroyed!"));
+    arduboy.println(F("Current score: " ));
     arduboy.println(score);
     arduboy.display();
     delay(1000);
     arduboy.println();
-    arduboy.println("Press any button");
-    arduboy.println("to start new planet");
+    arduboy.println(F("Press any button"));
+    arduboy.println(F("to start new planet"));
     arduboy.display();
     
     while(true){
@@ -375,7 +397,7 @@ void loop() {
   // If Arduboy won't render a new frame, skip
   if (!arduboy.nextFrame()) return;
   beep2.timer();
-  handleTones();
+  handleSounds();
 
   unsigned long stepStart, stepDuration;
 
@@ -649,17 +671,16 @@ void loop() {
 
   // HUD
   drawLives();
-  arduboy.setCursorX(36);
+  font3x5.setCursor(45,0);
   if (currentFuel > 0) {
-    arduboy.print(currentFuel);
+    font3x5.print(currentFuel);
   } else {
-    arduboy.print(F("EMPTY"));
+    font3x5.print(F("EMPTY"));
   }
-  arduboy.setCursorX(88);
-  arduboy.println(score);
-  arduboy.setCursorX(0);
+  font3x5.setCursor(88,0);
+  font3x5.println(score);
+  font3x5.setCursor(0,0);
 
-  // arduboy.display()
   stepStart = micros();
   arduboy.display();
   stepDuration = micros() - stepStart;

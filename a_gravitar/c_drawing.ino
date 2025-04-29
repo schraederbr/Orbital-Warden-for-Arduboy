@@ -90,26 +90,23 @@ void drawPlanet(bool drawLines = true, bool drawDots = false, bool drawTriangles
     //--------------------------------------------------------------------------
     // 4. Fill the polygon by horizontal scan lines
     //--------------------------------------------------------------------------
-    fillPolygonHorizontal(tx, ty, CIRCLE_NUM_POINTS);
+    // fillPolygonHorizontal(tx, ty, CIRCLE_NUM_POINTS);
   }
   
   // Draw planet as filled in triangles
   if (drawTriangles) {
-      // 1. Convert all world-space points to screen-space **once** before the loop
-      static int tx[CIRCLE_NUM_POINTS]; // Store transformed X coordinates
-      static int ty[CIRCLE_NUM_POINTS]; // Store transformed Y coordinates
+      static int tx[CIRCLE_NUM_POINTS]; 
+      static int ty[CIRCLE_NUM_POINTS]; 
 
       for (int i = 0; i < CIRCLE_NUM_POINTS; i++) {
           tx[i] = (int)(WORLD_CENTER_X + circle_points[i].x - cameraX);
           ty[i] = (int)(WORLD_CENTER_Y + circle_points[i].y - cameraY);
       }
 
-      // 3. Iterate through edges and draw triangles
       for (int i = 0; i < CIRCLE_NUM_POINTS - 1; i++) {
           arduboy.fillTriangle(circleCenterX, circleCenterY, tx[i], ty[i], tx[i + 1], ty[i + 1], WHITE);
       }
 
-      // 4. Close the loop: draw last triangle (avoids modulo)
       arduboy.fillTriangle(circleCenterX, circleCenterY, tx[CIRCLE_NUM_POINTS - 1], ty[CIRCLE_NUM_POINTS - 1], tx[0], ty[0], WHITE);
   }
 
@@ -121,10 +118,8 @@ void drawPlanet(bool drawLines = true, bool drawDots = false, bool drawTriangles
 void drawPlayerBullets(){
   for (int i = 0; i < MAX_BULLETS; i++) {
     if (bullets[i].active) {
-      // Convert bullet position from world coords to screen coords
       float bx = bullets[i].x - cameraX;
       float by = bullets[i].y - cameraY;
-      // Draw a small circle for the bullet
       arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
     }
   }
@@ -135,97 +130,96 @@ void drawTurretBullets() {
     if (turretBullets[i].active) {
       float bx = turretBullets[i].x - cameraX;
       float by = turretBullets[i].y - cameraY;
-      // Draw as a small circle
       arduboy.fillCircle((int)bx, (int)by, 1, WHITE);
     }
   }
 }
 
 
-void fillPolygonHorizontal(const int *px, const int *py, int n) {
-  if (n < 3) return;
+// void fillPolygonHorizontal(const int *px, const int *py, int n) {
+//   if (n < 3) return;
 
-  // 1. Find bounding box in Y
-  int minY = py[0];
-  int maxY = py[0];
-  for (int i = 1; i < n; i++) {
-    if (py[i] < minY) minY = py[i];
-    if (py[i] > maxY) maxY = py[i];
-  }
+//   // 1. Find bounding box in Y
+//   int minY = py[0];
+//   int maxY = py[0];
+//   for (int i = 1; i < n; i++) {
+//     if (py[i] < minY) minY = py[i];
+//     if (py[i] > maxY) maxY = py[i];
+//   }
 
-  // Clamp to screen bounds [0..HEIGHT-1]
-  if (minY < 0) minY = 0;
-  if (maxY >= HEIGHT) maxY = HEIGHT - 1;
+//   // Clamp to screen bounds [0..HEIGHT-1]
+//   if (minY < 0) minY = 0;
+//   if (maxY >= HEIGHT) maxY = HEIGHT - 1;
 
-  // Temporary array for storing intersection X coords
-  static int xIntersections[256]; // must be >= max number of edges
+//   // Temporary array for storing intersection X coords
+//   static int xIntersections[CIRCLE_NUM_POINTS]; // must be >= max number of edges
 
-  // 2. For each scanline y in [minY .. maxY]
-  for (int y = minY; y <= maxY; y++) {
-    int numIntersections = 0;
+//   // 2. For each scanline y in [minY .. maxY]
+//   for (int y = minY; y <= maxY; y++) {
+//     int numIntersections = 0;
 
-    // Scan all edges
-    for (int i = 0; i < n; i++) {
-      int j = (i + 1) % n; // next vertex index
+//     // Scan all edges
+//     for (int i = 0; i < n; i++) {
+//       int j = (i + 1) % n; // next vertex index
 
-      // Retrieve edge endpoints
-      int y1 = py[i], y2 = py[j];
-      int x1 = px[i], x2 = px[j];
+//       // Retrieve edge endpoints
+//       int y1 = py[i], y2 = py[j];
+//       int x1 = px[i], x2 = px[j];
 
-      // Skip horizontal edges
-      if (y1 == y2) continue;
+//       // Skip horizontal edges
+//       if (y1 == y2) continue;
 
-      // Order y1 <= y2
-      if (y1 > y2) {
-        int tmp = y1; y1 = y2; y2 = tmp;
-        tmp = x1; x1 = x2; x2 = tmp;
-      }
+//       // Order y1 <= y2
+//       if (y1 > y2) {
+//         int tmp = y1; y1 = y2; y2 = tmp;
+//         tmp = x1; x1 = x2; x2 = tmp;
+//       }
 
-      // Check if this scanline intersects [y1..y2)
-      if (y >= y1 && y < y2) {
-        // Integer interpolation:
-        // xHit = x1 + ((x2 - x1)*(y - y1)) / (y2 - y1)
-        int dy1 = y - y1;
-        int dy  = (y2 - y1);
-        // Use 32-bit for multiplication to avoid 16-bit overflow
-        int32_t dx = (int32_t)(x2 - x1) * (int32_t)dy1;
+//       // Check if this scanline intersects [y1..y2)
+//       if (y >= y1 && y < y2) {
+//         // Integer interpolation:
+//         // xHit = x1 + ((x2 - x1)*(y - y1)) / (y2 - y1)
+//         int dy1 = y - y1;
+//         int dy  = (y2 - y1);
+//         // Use 32-bit for multiplication to avoid 16-bit overflow
+//         int32_t dx = (int32_t)(x2 - x1) * (int32_t)dy1;
 
-        int xHit = x1 + (int)(dx / dy);
+//         int xHit = x1 + (int)(dx / dy);
 
-        xIntersections[numIntersections++] = xHit;
-      }
-    }
+//         xIntersections[numIntersections++] = xHit;
+//       }
+//     }
 
-    // If no intersections, skip
-    if (numIntersections < 2) continue;
+//     // If no intersections, skip
+//     if (numIntersections < 2) continue;
 
-    // 2b. Sort intersection X coords (Insertion sort here for example)
-    for (int i = 1; i < numIntersections; i++) {
-      int key = xIntersections[i];
-      int j = i - 1;
-      while (j >= 0 && xIntersections[j] > key) {
-        xIntersections[j + 1] = xIntersections[j];
-        j--;
-      }
-      xIntersections[j + 1] = key;
-    }
+//     // 2b. Sort intersection X coords (Insertion sort here for example)
+//     for (int i = 1; i < numIntersections; i++) {
+//       int key = xIntersections[i];
+//       int j = i - 1;
+//       while (j >= 0 && xIntersections[j] > key) {
+//         xIntersections[j + 1] = xIntersections[j];
+//         j--;
+//       }
+//       xIntersections[j + 1] = key;
+//     }
 
-    // 2c. Draw horizontal line segments
-    for (int i = 0; i < numIntersections - 1; i += 2) {
-      int xStart = xIntersections[i];
-      int xEnd   = xIntersections[i + 1];
+//     // 2c. Draw horizontal line segments
+//     for (int i = 0; i < numIntersections - 1; i += 2) {
+//       int xStart = xIntersections[i];
+//       int xEnd   = xIntersections[i + 1];
 
-      // Clip horizontally
-      if (xEnd < 0 || xStart >= WIDTH) {
-        continue;
-      }
-      if (xStart < 0) xStart = 0;
-      if (xEnd >= WIDTH) xEnd = WIDTH - 1;
+//       // Clip horizontally
+//       if (xEnd < 0 || xStart >= WIDTH) {
+//         continue;
+//       }
+//       if (xStart < 0) xStart = 0;
+//       if (xEnd >= WIDTH) xEnd = WIDTH - 1;
 
-      arduboy.drawFastHLine(xStart, y, (xEnd - xStart + 1), WHITE);
-    }
-  }
-}
+//       arduboy.drawFastHLine(xStart, y, (xEnd - xStart + 1), WHITE);
+//     }
+//   }
+// }
 
 void drawTurret(Turret* turret, float screenX, float screenY){
 
