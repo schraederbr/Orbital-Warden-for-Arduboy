@@ -513,6 +513,11 @@ void drawShip(bool smallShip, bool simpleStyle, float screenX, float screenY, fl
 
 }
 
+void drawLives(){
+  for (int i = 0; i < lives - 1; i++) {
+    Sprites::drawSelfMasked(i * 6, 0, shipSprite, 0);
+  }
+}
 
 
 

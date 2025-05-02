@@ -387,11 +387,6 @@ void checkPlanetComplete(){
   }
 }
 
-void drawLives(){
-  for (int i = 0; i < lives; i++) {
-    Sprites::drawSelfMasked(i * 6, 0, shipSprite, 0);
-  }
-}
 
 void loop() {
   // Measure the start of this frame in microseconds
