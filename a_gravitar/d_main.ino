@@ -50,8 +50,11 @@ void startScreen(){
   // arduboy.display();
   // waitForPress();
   font3x5.println(F("Destroy Turrets     250 points"));
-  arduboy.drawRect(67, 1, 4, 6);
-
+  // arduboy.drawRect(67, 1, 4, 6);
+  arduboy.drawLine(66, 5, 68, 1);
+  arduboy.drawLine(68, 1, 72, 1);
+  arduboy.drawLine(72, 1, 74, 5);
+  arduboy.drawLine(74, 5, 66, 5);
   font3x5.println(F("Collect Fuel     100 points"));
   arduboy.fillCircle(57, 11, 3);
   font3x5.setCursor(0, 25);
