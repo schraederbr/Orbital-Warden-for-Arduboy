@@ -67,7 +67,7 @@ float shipAngle;      // Ship’s facing angle in radians
 float velX, velY;     // Velocity
 
 const float ACCELERATION   = 0.02f;  
-const float ROTATION_SPEED = 0.1f;  // Radians/frame rotation
+const float ROTATION_SPEED = 0.08f;  // Radians/frame rotation
 const float FRICTION       = 0.997f; 
 const float GRAVITY_ACCEL = 0.005f; 
 
